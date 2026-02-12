@@ -2,9 +2,11 @@ import { describe, it, expect, beforeAll } from "@jest/globals";
 
 import type { BitbucketAccount, BitbucketRepository } from "../../src/bitbucket/types.js";
 
-import { createIntegrationClient, waitForBitbucket, TEST_WORKSPACE } from "./setup.js";
+import { createIntegrationClient, waitForBitbucket, TEST_WORKSPACE, canRunIntegration } from "./setup.js";
 
-describe("Integration: Smoke Tests", () => {
+const describeIntegration = canRunIntegration ? describe : describe.skip;
+
+describeIntegration("Integration: Smoke Tests", () => {
     const client = createIntegrationClient();
 
     beforeAll(async() => {

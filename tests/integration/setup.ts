@@ -10,13 +10,15 @@ export const BITBUCKET_CONFIG = {
 /** Default workspace for integration tests. */
 export const TEST_WORKSPACE = process.env.BITBUCKET_WORKSPACE ?? "";
 
+/** Whether integration tests can run (token is available). */
+export const canRunIntegration = !!BITBUCKET_CONFIG.token;
+
 /** Create a BitbucketClient for integration tests. */
 export function createIntegrationClient(): BitbucketClient {
-    if (!BITBUCKET_CONFIG.token) {
-        throw new Error("BITBUCKET_TOKEN is required for integration tests. Set it as an environment variable.");
-    }
-
-    return new BitbucketClient(BITBUCKET_CONFIG);
+    return new BitbucketClient({
+        ...BITBUCKET_CONFIG,
+        token: BITBUCKET_CONFIG.token || "dummy-token-for-skip"
+    });
 }
 
 /** Wait until Bitbucket API is reachable, with a timeout. */
