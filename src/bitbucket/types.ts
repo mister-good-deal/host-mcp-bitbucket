@@ -1,5 +1,17 @@
 // Bitbucket REST API response types
 
+export interface BitbucketWorkspace {
+    uuid: string;
+    name: string;
+    slug: string;
+    is_private: boolean;
+    type: "workspace";
+    created_on?: string;
+    updated_on?: string;
+    links: Record<string, BitbucketLink | BitbucketLink[]>;
+    [key: string]: unknown;
+}
+
 export interface BitbucketRepository {
     uuid: string;
     name: string;

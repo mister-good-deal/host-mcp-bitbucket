@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Workspace tools**: `getCurrentUser`, `getWorkspace`
+- **Output schemas**: Zod-based response schemas for all 32 tools, wired into `registerTool({ outputSchema })`
+- **Docker-based integration tests**: Mock Bitbucket API server (`tests/integration/mock-server/`) running in Docker, no real credentials required
+
+### Changed
+
+- Integration tests now use a Docker mock server instead of requiring real Bitbucket Cloud API credentials
+- Integration workflow (`integration.yml`) uses `docker compose` to start/stop the mock server
+
 ## [0.1.0] - 2026-02-12
 
 ### Added

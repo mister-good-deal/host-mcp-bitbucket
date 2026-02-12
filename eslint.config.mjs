@@ -124,6 +124,6 @@ export default tsEslint.config(
     },
     {
         name: "ignore",
-        ignores: ["**/node_modules", "**/dist", "**/coverage", "eslint.config.mjs"]
+        ignores: ["**/node_modules", "**/dist", "**/coverage", "eslint.config.mjs", "tests/integration/mock-server/**"]
     }
 );

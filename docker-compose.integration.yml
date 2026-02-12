@@ -1,0 +1,15 @@
+services:
+    mock-bitbucket:
+        build:
+            context: ./tests/integration/mock-server
+            dockerfile: Dockerfile
+        ports:
+            - "7990:7990"
+        environment:
+            PORT: "7990"
+            MOCK_TOKEN: "test-token"
+        healthcheck:
+            test: ["CMD", "wget", "-qO-", "--header=Authorization: Bearer test-token", "http://localhost:7990/health"]
+            interval: 2s
+            timeout: 2s
+            retries: 10

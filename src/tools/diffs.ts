@@ -7,6 +7,7 @@ import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketDiffStat } from "../bitbucket/types.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
+import { getPullRequestDiffOutput, getPullRequestDiffStatOutput, getPullRequestPatchOutput } from "./output-schemas.js";
 
 export function registerDiffTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
     const logger = getLogger();
@@ -25,6 +26,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, de
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID")
             },
+            outputSchema: getPullRequestDiffOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId }) => {
@@ -63,6 +65,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, de
                 page: z.number().int().min(1).optional().describe("Page number"),
                 all: z.boolean().optional().describe("Fetch all pages")
             },
+            outputSchema: getPullRequestDiffStatOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, pagelen, page, all }) => {
@@ -99,6 +102,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, de
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID")
             },
+            outputSchema: getPullRequestPatchOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId }) => {
