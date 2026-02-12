@@ -1,0 +1,64 @@
+{
+    "name": "@mister-good-deal/host-mcp-bitbucket",
+    "version": "0.1.0",
+    "description": "Local MCP server for Bitbucket — provides AI assistants with access to Bitbucket repositories, pull requests, comments, diffs, and tasks via REST API",
+    "packageManager": "pnpm@10.29.2",
+    "type": "module",
+    "bin": {
+        "host-mcp-bitbucket": "dist/index.js"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "dev": "tsx src/index.ts",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "test": "NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest --config jest.config.ts",
+        "test:integration": "NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest --config jest.integration.config.ts --testTimeout=30000",
+        "prepublishOnly": "pnpm run build"
+    },
+    "keywords": [
+        "mcp",
+        "bitbucket",
+        "pull-request",
+        "code-review",
+        "model-context-protocol",
+        "ai",
+        "llm"
+    ],
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mister-good-deal/host-mcp-bitbucket"
+    },
+    "bugs": {
+        "url": "https://github.com/mister-good-deal/host-mcp-bitbucket/issues"
+    },
+    "homepage": "https://github.com/mister-good-deal/host-mcp-bitbucket#readme",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.26.0",
+        "commander": "^13.0.0",
+        "winston": "^3.17.0",
+        "zod": "^3.25.0"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.0.0",
+        "@stylistic/eslint-plugin": "^4.0.0",
+        "@types/jest": "^29.5.0",
+        "@types/node": "^22.0.0",
+        "eslint": "^9.0.0",
+        "globals": "^16.0.0",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.2.0",
+        "ts-node": "^10.9.2",
+        "tsx": "^4.0.0",
+        "typescript": "^5.7.0",
+        "typescript-eslint": "^8.0.0"
+    }
+}
