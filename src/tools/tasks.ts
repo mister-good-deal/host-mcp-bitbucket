@@ -4,7 +4,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { BitbucketClient } from "../bitbucket/client.js";
 import { BitbucketClientError } from "../bitbucket/client.js";
-import type { BitbucketTask, TaskState } from "../bitbucket/types.js";
+import type { BitbucketBlockerComment, BitbucketTask, TaskState } from "../bitbucket/types.js";
+import type { PathBuilder } from "../bitbucket/utils.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
 import {
@@ -14,15 +15,11 @@ import {
 
 const TaskStateEnum = z.enum(["OPEN", "RESOLVED"]);
 
-export function registerTaskTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
+export function registerTaskTools(server: McpServer, client: BitbucketClient, paths: PathBuilder, defaultWorkspace?: string): void {
     const logger = getLogger();
 
     function resolveWorkspace(workspace?: string) {
         return workspace ?? defaultWorkspace;
-    }
-
-    function prTasksPath(ws: string, repoSlug: string, pullRequestId: number) {
-        return `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/tasks`;
     }
 
     // ── getPullRequestTasks ──────────────────────────────────────────────
@@ -49,8 +46,17 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
             logger.debug(`getPullRequestTasks: ${ws}/${repoSlug}#${pullRequestId}`);
 
             try {
+                if (paths.isDataCenter) {
+                    const result = await client.getPaginated<BitbucketBlockerComment>(
+                        paths.pullRequestTasks(ws, repoSlug, pullRequestId),
+                        { pagelen, page, all }
+                    );
+
+                    return toMcpResult(toolSuccess(result.values));
+                }
+
                 const result = await client.getPaginated<BitbucketTask>(
-                    prTasksPath(ws, repoSlug, pullRequestId),
+                    paths.pullRequestTasks(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
                 );
 
@@ -75,7 +81,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 content: z.string().describe("Task content"),
-                commentId: z.number().int().optional().describe("Comment ID to attach the task to"),
+                commentId: z.number().int().optional().describe("Comment ID to attach the task to (Cloud only)"),
                 state: TaskStateEnum.optional().describe("Initial task state (OPEN or RESOLVED)")
             },
             outputSchema: createPullRequestTaskOutput,
@@ -89,6 +95,22 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
             logger.debug(`createPullRequestTask: ${ws}/${repoSlug}#${pullRequestId}`);
 
             try {
+                if (paths.isDataCenter) {
+                    const body: Record<string, unknown> = {
+                        text: content,
+                        severity: "BLOCKER"
+                    };
+
+                    if (state) body.state = state;
+
+                    const task = await client.post<BitbucketBlockerComment>(
+                        paths.pullRequestTasks(ws, repoSlug, pullRequestId),
+                        body
+                    );
+
+                    return toMcpResult(toolSuccess(task, "Task created."));
+                }
+
                 const body: Record<string, unknown> = {
                     content: { raw: content }
                 };
@@ -98,7 +120,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 if (state) body.state = state;
 
                 const task = await client.post<BitbucketTask>(
-                    prTasksPath(ws, repoSlug, pullRequestId),
+                    paths.pullRequestTasks(ws, repoSlug, pullRequestId),
                     body
                 );
 
@@ -135,8 +157,16 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
             logger.debug(`getPullRequestTask: ${ws}/${repoSlug}#${pullRequestId}, task=${taskId}`);
 
             try {
+                if (paths.isDataCenter) {
+                    const task = await client.get<BitbucketBlockerComment>(
+                        paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId)
+                    );
+
+                    return toMcpResult(toolSuccess(task));
+                }
+
                 const task = await client.get<BitbucketTask>(
-                    `${prTasksPath(ws, repoSlug, pullRequestId)}/${taskId}`
+                    paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId)
                 );
 
                 return toMcpResult(toolSuccess(task));
@@ -154,7 +184,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
     server.registerTool(
         "updatePullRequestTask",
         {
-            description: "Update a task on a pull request (content, state)",
+            description: "Update a task on a pull request (content, state). On Data Center, the task version is fetched automatically for optimistic concurrency.",
             inputSchema: {
                 workspace: z.string().optional().describe("Bitbucket workspace name"),
                 repoSlug: z.string().describe("Repository slug"),
@@ -174,6 +204,29 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
             logger.debug(`updatePullRequestTask: ${ws}/${repoSlug}#${pullRequestId}, task=${taskId}`);
 
             try {
+                if (paths.isDataCenter) {
+                    // DC requires version for optimistic concurrency — fetch current task first
+                    const current = await client.get<BitbucketBlockerComment>(
+                        paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId)
+                    );
+
+                    const body: Record<string, unknown> = {
+                        id: taskId,
+                        version: current.version
+                    };
+
+                    if (content !== undefined) body.text = content;
+
+                    if (state !== undefined) body.state = state as TaskState;
+
+                    const task = await client.put<BitbucketBlockerComment>(
+                        paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId),
+                        body
+                    );
+
+                    return toMcpResult(toolSuccess(task, "Task updated."));
+                }
+
                 const body: Record<string, unknown> = {};
 
                 if (content !== undefined) body.content = { raw: content };
@@ -181,7 +234,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 if (state !== undefined) body.state = state as TaskState;
 
                 const task = await client.put<BitbucketTask>(
-                    `${prTasksPath(ws, repoSlug, pullRequestId)}/${taskId}`,
+                    paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId),
                     body
                 );
 
@@ -200,7 +253,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
     server.registerTool(
         "deletePullRequestTask",
         {
-            description: "Delete a task from a pull request",
+            description: "Delete a task from a pull request. On Data Center, the task version is fetched automatically for optimistic concurrency.",
             inputSchema: {
                 workspace: z.string().optional().describe("Bitbucket workspace name"),
                 repoSlug: z.string().describe("Repository slug"),
@@ -218,8 +271,22 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
             logger.debug(`deletePullRequestTask: ${ws}/${repoSlug}#${pullRequestId}, task=${taskId}`);
 
             try {
+                if (paths.isDataCenter) {
+                    // DC requires version for optimistic concurrency — fetch current task first
+                    const current = await client.get<BitbucketBlockerComment>(
+                        paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId)
+                    );
+
+                    await client.delete(
+                        paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId),
+                        { version: current.version }
+                    );
+
+                    return toMcpResult(toolSuccess(true, "Task deleted."));
+                }
+
                 await client.delete(
-                    `${prTasksPath(ws, repoSlug, pullRequestId)}/${taskId}`
+                    paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId)
                 );
 
                 return toMcpResult(toolSuccess(true, "Task deleted."));

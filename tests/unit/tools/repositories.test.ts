@@ -2,17 +2,19 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { registerRepositoryTools } from "../../../src/tools/repositories.js";
-import { createMockClient, extractToolResponse, make404 } from "./helpers.js";
+import { createMockClient, createPaths, extractToolResponse, make404 } from "./helpers.js";
 
 describe("Repository Tools", () => {
     let server: McpServer;
     let client: ReturnType<typeof createMockClient>;
     let toolHandlers: Map<string, (args: Record<string, unknown>) => Promise<unknown>>;
+    let paths: ReturnType<typeof createPaths>;
 
     beforeEach(() => {
         server = new McpServer({ name: "test", version: "0.0.1" });
         client = createMockClient();
         toolHandlers = new Map();
+        paths = createPaths();
 
         const originalRegisterTool = server.registerTool.bind(server);
 
@@ -25,7 +27,7 @@ describe("Repository Tools", () => {
             return originalRegisterTool(...(args as Parameters<typeof originalRegisterTool>));
         }) as typeof server.registerTool;
 
-        registerRepositoryTools(server, client, "default-ws");
+        registerRepositoryTools(server, client, paths, "default-ws");
     });
 
     describe("listRepositories", () => {
@@ -101,14 +103,14 @@ describe("Repository Tools", () => {
                 return origReg(...(args as Parameters<typeof origReg>));
             }) as typeof serverNoWs.registerTool;
 
-            registerRepositoryTools(serverNoWs, client);
+            registerRepositoryTools(serverNoWs, client, paths);
 
             const handler = handlersNoWs.get("listRepositories")!;
             const result = await handler({}) as ReturnType<typeof extractToolResponse>;
             const response = extractToolResponse(result as never);
 
             expect(response.status).toBe("FAILED");
-            expect(response.message).toContain("Workspace is required");
+            expect(response.message).toContain("is required");
         });
 
         it("should handle unexpected errors gracefully", async() => {

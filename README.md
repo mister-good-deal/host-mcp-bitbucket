@@ -4,14 +4,27 @@ A local MCP (Model Context Protocol) server for Bitbucket that provides AI assis
 
 Works with both **Bitbucket Cloud** and **Bitbucket Server/Data Center** instances.
 
+## Compatibility
+
+| Platform | Versions | Status |
+|----------|----------|--------|
+| Bitbucket Cloud | Current | ✅ Fully supported |
+| Bitbucket Data Center | 8.x | ✅ Fully supported |
+| Bitbucket Data Center | 9.x | ✅ Fully supported |
+| Bitbucket Data Center | 10.x | ✅ Fully supported |
+
+> **Note:** Tasks on Data Center use the blocker-comments API (`/blocker-comments`) introduced in Bitbucket 7.2. The legacy `/tasks` endpoint was removed in Bitbucket 9.0. This MCP server uses the modern blocker-comments API, which is the only option on DC 8.0+.
+
 ## Features
 
+- **Dual platform** — full support for both Bitbucket Cloud and Bitbucket Server/Data Center APIs
 - **Repository operations** — list and get repository details
 - **Pull request management** — create, update, approve, merge, decline, request changes
 - **PR comments** — add, update, delete, resolve/reopen comments (including inline comments)
 - **PR diffs** — get raw diffs, diff statistics, and patches
 - **PR tasks** — create, update, delete tasks on pull requests
-- **Pagination** — automatic pagination with `all` mode (capped at 1000 items)
+- **Branch & tag listing** — list branches and tags with optional filtering
+- **Pagination** — automatic pagination with `all` mode (capped at 1000 items); Cloud and DC pagination styles handled transparently
 - **Dual transport** — stdio (default) and Streamable HTTP
 - **Retry with backoff** — automatic retry on transient errors (429, 5xx)
 
@@ -70,13 +83,16 @@ export BITBUCKET_URL="https://api.bitbucket.org/2.0"  # optional, default for Cl
 
 ### Bitbucket Server / Data Center
 
-For self-hosted instances, point `--bitbucket-url` to your server's REST API endpoint:
+For self-hosted instances, point `--bitbucket-url` to your server URL (the REST API path is auto-appended):
 
 ```bash
 npx @mister-good-deal/host-mcp-bitbucket \
-    --bitbucket-url "https://bitbucket.mycompany.com/rest/api/1.0" \
-    --bitbucket-token "<YOUR_TOKEN>"
+    --bitbucket-url "https://bitbucket.mycompany.com" \
+    --bitbucket-token "<YOUR_HTTP_ACCESS_TOKEN>" \
+    --default-workspace "<PROJECT_KEY>"
 ```
+
+The server auto-detects the platform (Cloud vs Data Center) from the URL and uses the correct API paths, pagination style, and request bodies. For DC, the `--default-workspace` value maps to a **project key**.
 
 ## Available Tools
 
@@ -87,6 +103,13 @@ Unless noted otherwise, listing tools accept the following optional parameters:
 - `pagelen` — Number of items per page (default: 10, max: 100)
 - `page` — 1-based page number
 - `all` — When `true`, fetches all pages automatically (capped at 1000 items)
+
+### Workspace / Connectivity
+
+| Tool | Description |
+|------|-------------|
+| `getCurrentUser` | Get the authenticated user (Cloud) or verify connectivity (DC) |
+| `getWorkspace` | Get workspace (Cloud) or project (DC) details |
 
 ### Repository Operations
 
@@ -135,13 +158,22 @@ Unless noted otherwise, listing tools accept the following optional parameters:
 
 ### Pull Request Task Operations
 
+Tasks on Cloud use the standard tasks API. On Data Center, tasks are implemented via blocker-comments (`/blocker-comments`), which is the canonical replacement since Bitbucket 7.2+.
+
 | Tool | Description |
 |------|-------------|
 | `getPullRequestTasks` | List tasks on a pull request |
 | `createPullRequestTask` | Create a task on a pull request |
 | `getPullRequestTask` | Get a specific task |
-| `updatePullRequestTask` | Update a task (content, state) |
-| `deletePullRequestTask` | Delete a task |
+| `updatePullRequestTask` | Update a task (content, state). On DC, version is fetched automatically for optimistic concurrency |
+| `deletePullRequestTask` | Delete a task. On DC, version is fetched automatically for optimistic concurrency |
+
+### Branch & Tag Operations
+
+| Tool | Description |
+|------|-------------|
+| `listBranches` | List branches in a repository (with optional name filter) |
+| `listTags` | List tags in a repository (with optional name filter) |
 
 ## Development
 
@@ -152,6 +184,18 @@ pnpm run lint
 pnpm run test
 pnpm run dev   # Run with tsx in dev mode
 ```
+
+### Integration Tests
+
+Integration tests run against a lightweight Docker mock server that stubs both Bitbucket Cloud and Data Center REST APIs:
+
+```bash
+pnpm run test:integration
+```
+
+The mock server starts in under 1 second and provides deterministic responses with pre-populated fixtures (projects, repositories, pull requests, comments, tasks/blocker-comments, branches, tags).
+
+> **Note:** Atlassian publishes an official Bitbucket Data Center Docker image ([`atlassian/bitbucket`](https://hub.docker.com/r/atlassian/bitbucket)) that can be used for manual smoke testing against a real instance. However, it requires ~2 GB RAM, takes 1–3 minutes to start, and needs a license — so it is not used for automated tests.
 
 ## License
 

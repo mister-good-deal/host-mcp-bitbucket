@@ -1,6 +1,36 @@
 import { describe, it, expect } from "@jest/globals";
 
-import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString } from "../../../src/bitbucket/utils.js";
+import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString, detectPlatform, PathBuilder } from "../../../src/bitbucket/utils.js";
+
+describe("detectPlatform", () => {
+    it("should detect bitbucket.org as cloud", () => {
+        expect(detectPlatform("https://bitbucket.org/myworkspace")).toBe("cloud");
+    });
+
+    it("should detect www.bitbucket.org as cloud", () => {
+        expect(detectPlatform("https://www.bitbucket.org/myworkspace")).toBe("cloud");
+    });
+
+    it("should detect api.bitbucket.org as cloud", () => {
+        expect(detectPlatform("https://api.bitbucket.org/2.0")).toBe("cloud");
+    });
+
+    it("should detect self-hosted URL as datacenter", () => {
+        expect(detectPlatform("https://bitbucket.mycompany.com")).toBe("datacenter");
+    });
+
+    it("should detect self-hosted URL with REST path as datacenter", () => {
+        expect(detectPlatform("https://bitbucket.mycompany.com/rest/api/latest")).toBe("datacenter");
+    });
+
+    it("should detect localhost URL with /2.0 path as cloud", () => {
+        expect(detectPlatform("http://localhost:7990/2.0")).toBe("cloud");
+    });
+
+    it("should detect proxy URL with /2.0 path as cloud", () => {
+        expect(detectPlatform("https://proxy.mycompany.com/2.0")).toBe("cloud");
+    });
+});
 
 describe("normalizeBaseUrl", () => {
     it("should convert bitbucket.org web URL to API URL", () => {
@@ -23,16 +53,20 @@ describe("normalizeBaseUrl", () => {
         expect(normalizeBaseUrl("https://bitbucket.mycompany.com/rest/api/1.0/")).toBe("https://bitbucket.mycompany.com/rest/api/1.0");
     });
 
-    it("should strip multiple trailing slashes", () => {
-        expect(normalizeBaseUrl("https://bitbucket.mycompany.com///")).toBe("https://bitbucket.mycompany.com");
+    it("should strip multiple trailing slashes and add REST path", () => {
+        expect(normalizeBaseUrl("https://bitbucket.mycompany.com///")).toBe("https://bitbucket.mycompany.com/rest/api/latest");
     });
 
-    it("should leave self-hosted URLs as-is (minus trailing slashes)", () => {
-        expect(normalizeBaseUrl("https://bitbucket.mycompany.com")).toBe("https://bitbucket.mycompany.com");
+    it("should add REST API path to bare self-hosted URL", () => {
+        expect(normalizeBaseUrl("https://bitbucket.mycompany.com")).toBe("https://bitbucket.mycompany.com/rest/api/latest");
     });
 
     it("should handle bare bitbucket.org without path", () => {
         expect(normalizeBaseUrl("https://bitbucket.org")).toBe("https://api.bitbucket.org/2.0");
+    });
+
+    it("should keep /2.0 URL unchanged for proxy or mock servers", () => {
+        expect(normalizeBaseUrl("http://localhost:7990/2.0")).toBe("http://localhost:7990/2.0");
     });
 });
 
@@ -89,5 +123,31 @@ describe("buildQueryString", () => {
 
     it("should handle boolean values", () => {
         expect(buildQueryString({ all: true })).toBe("?all=true");
+    });
+});
+
+describe("PathBuilder", () => {
+    describe("Cloud", () => {
+        const paths = new PathBuilder("cloud");
+
+        it("should use /tasks path for pullRequestTasks", () => {
+            expect(paths.pullRequestTasks("ws", "repo", 1)).toBe("/repositories/ws/repo/pullrequests/1/tasks");
+        });
+
+        it("should use /tasks/{id} path for pullRequestTask", () => {
+            expect(paths.pullRequestTask("ws", "repo", 1, 42)).toBe("/repositories/ws/repo/pullrequests/1/tasks/42");
+        });
+    });
+
+    describe("Data Center", () => {
+        const paths = new PathBuilder("datacenter");
+
+        it("should use /blocker-comments path for pullRequestTasks", () => {
+            expect(paths.pullRequestTasks("PL", "my-repo", 1)).toBe("/projects/PL/repos/my-repo/pull-requests/1/blocker-comments");
+        });
+
+        it("should use /blocker-comments/{id} path for pullRequestTask", () => {
+            expect(paths.pullRequestTask("PL", "my-repo", 1, 42)).toBe("/projects/PL/repos/my-repo/pull-requests/1/blocker-comments/42");
+        });
     });
 });

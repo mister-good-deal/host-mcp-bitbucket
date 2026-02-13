@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { Config } from "./config.js";
 import { BitbucketClient } from "./bitbucket/client.js";
-import { normalizeBaseUrl, extractWorkspaceFromUrl } from "./bitbucket/utils.js";
+import { normalizeBaseUrl, extractWorkspaceFromUrl, detectPlatform, PathBuilder } from "./bitbucket/utils.js";
 import { getLogger } from "./logger.js";
 import { VERSION } from "./version.js";
 import { registerRepositoryTools } from "./tools/repositories.js";
@@ -11,6 +11,7 @@ import { registerCommentTools } from "./tools/comments.js";
 import { registerDiffTools } from "./tools/diffs.js";
 import { registerTaskTools } from "./tools/tasks.js";
 import { registerWorkspaceTools } from "./tools/workspace.js";
+import { registerRefTools } from "./tools/refs.js";
 
 export function createServer(config: Config): McpServer {
     const logger = getLogger();
@@ -20,6 +21,7 @@ export function createServer(config: Config): McpServer {
         version: VERSION
     });
 
+    const platform = detectPlatform(config.bitbucketUrl);
     const baseUrl = normalizeBaseUrl(config.bitbucketUrl);
 
     // Auto-extract workspace from URL if not explicitly set
@@ -30,19 +32,23 @@ export function createServer(config: Config): McpServer {
         token: config.bitbucketToken,
         timeout: config.timeout,
         maxRetries: config.maxRetries,
-        retryDelay: config.retryDelay
+        retryDelay: config.retryDelay,
+        platform
     });
 
-    logger.info(`Registering tools for Bitbucket instance: ${baseUrl}`);
+    const paths = new PathBuilder(platform);
 
-    if (defaultWorkspace) logger.info(`Default workspace: ${defaultWorkspace}`);
+    logger.info(`Registering tools for Bitbucket instance: ${baseUrl} (${platform})`);
 
-    registerWorkspaceTools(server, client, defaultWorkspace);
-    registerRepositoryTools(server, client, defaultWorkspace);
-    registerPullRequestTools(server, client, defaultWorkspace);
-    registerCommentTools(server, client, defaultWorkspace);
-    registerDiffTools(server, client, defaultWorkspace);
-    registerTaskTools(server, client, defaultWorkspace);
+    if (defaultWorkspace) logger.info(`Default workspace/project: ${defaultWorkspace}`);
+
+    registerWorkspaceTools(server, client, paths, defaultWorkspace);
+    registerRepositoryTools(server, client, paths, defaultWorkspace);
+    registerPullRequestTools(server, client, paths, defaultWorkspace);
+    registerCommentTools(server, client, paths, defaultWorkspace);
+    registerDiffTools(server, client, paths, defaultWorkspace);
+    registerTaskTools(server, client, paths, defaultWorkspace);
+    registerRefTools(server, client, paths, defaultWorkspace);
 
     logger.info("All MCP tools registered successfully");
 

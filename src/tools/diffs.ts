@@ -5,11 +5,12 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { BitbucketClient } from "../bitbucket/client.js";
 import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketDiffStat } from "../bitbucket/types.js";
+import type { PathBuilder } from "../bitbucket/utils.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
 import { getPullRequestDiffOutput, getPullRequestDiffStatOutput, getPullRequestPatchOutput } from "./output-schemas.js";
 
-export function registerDiffTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
+export function registerDiffTools(server: McpServer, client: BitbucketClient, paths: PathBuilder, defaultWorkspace?: string): void {
     const logger = getLogger();
 
     function resolveWorkspace(workspace?: string) {
@@ -38,7 +39,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, de
 
             try {
                 const diff = await client.getText(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/diff`
+                    paths.pullRequestDiff(ws, repoSlug, pullRequestId)
                 );
 
                 return toMcpResult(toolSuccess(diff));
@@ -77,7 +78,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, de
 
             try {
                 const result = await client.getPaginated<BitbucketDiffStat>(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/diffstat`,
+                    paths.pullRequestDiffStat(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
                 );
 
@@ -110,11 +111,15 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, de
 
             if (!ws) return toMcpResult(toolError(new Error("Workspace is required.")));
 
+            if (paths.isDataCenter) {
+                return toMcpResult(toolError(new Error("getPullRequestPatch is not available on Bitbucket Data Center. Use getPullRequestDiff instead.")));
+            }
+
             logger.debug(`getPullRequestPatch: ${ws}/${repoSlug}#${pullRequestId}`);
 
             try {
                 const patch = await client.getText(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/patch`
+                    paths.pullRequestPatch(ws, repoSlug, pullRequestId)
                 );
 
                 return toMcpResult(toolSuccess(patch));

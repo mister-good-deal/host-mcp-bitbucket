@@ -44,10 +44,12 @@ export function toolError(error: unknown): ToolResponse {
 
 /**
  * Wrap a ToolResponse as an MCP CallToolResult content block.
+ * Includes `structuredContent` so tools with `outputSchema` pass SDK validation.
  */
 export function toMcpResult(response: ToolResponse) {
     return {
         content: [{ type: "text" as const, text: JSON.stringify(response) }],
+        structuredContent: response as unknown as Record<string, unknown>,
         isError: response.status === "FAILED"
     };
 }
