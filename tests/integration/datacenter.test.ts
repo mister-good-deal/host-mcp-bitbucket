@@ -376,28 +376,80 @@ describedc("Integration: Bitbucket Data Center", () => {
         });
     });
 
-    // ── Tasks (not supported on DC) ──────────────────────────────────
+    // ── Tasks (via blocker-comments on DC) ─────────────────────────────
 
-    describe("tasks (not supported on DC)", () => {
-        it("getPullRequestTasks should return not-supported error", async() => {
+    describe("tasks (blocker-comments)", () => {
+        let createdTaskId: number | undefined;
+
+        it("getPullRequestTasks should list blocker-comments", async() => {
             const res = await callTool("getPullRequestTasks", {
                 repoSlug: TEST_REPO,
                 pullRequestId: TEST_PR_ID
             });
 
-            expect(res.status).toBe("FAILED");
-            expect(res.message).toContain("not available");
+            expect(res.status).toBe("COMPLETED");
+            expect(Array.isArray(res.result)).toBe(true);
         });
 
-        it("createPullRequestTask should return not-supported error", async() => {
+        it("createPullRequestTask should create a blocker-comment", async() => {
             const res = await callTool("createPullRequestTask", {
                 repoSlug: TEST_REPO,
                 pullRequestId: TEST_PR_ID,
-                content: "Test task"
+                content: "Integration test task"
             });
 
-            expect(res.status).toBe("FAILED");
-            expect(res.message).toContain("not available");
+            expect(res.status).toBe("COMPLETED");
+            expect(res.message).toContain("created");
+
+            const task = res.result as { id: number; text: string; severity: string };
+
+            expect(task.id).toBeDefined();
+            expect(task.severity).toBe("BLOCKER");
+            createdTaskId = task.id;
+        });
+
+        it("getPullRequestTask should get a specific blocker-comment", async() => {
+            if (!createdTaskId) return;
+
+            const res = await callTool("getPullRequestTask", {
+                repoSlug: TEST_REPO,
+                pullRequestId: TEST_PR_ID,
+                taskId: createdTaskId
+            });
+
+            expect(res.status).toBe("COMPLETED");
+
+            const task = res.result as { id: number; text: string };
+
+            expect(task.id).toBe(createdTaskId);
+            expect(task.text).toBe("Integration test task");
+        });
+
+        it("updatePullRequestTask should resolve a blocker-comment", async() => {
+            if (!createdTaskId) return;
+
+            const res = await callTool("updatePullRequestTask", {
+                repoSlug: TEST_REPO,
+                pullRequestId: TEST_PR_ID,
+                taskId: createdTaskId,
+                state: "RESOLVED"
+            });
+
+            expect(res.status).toBe("COMPLETED");
+            expect(res.message).toContain("updated");
+        });
+
+        it("deletePullRequestTask should delete a blocker-comment", async() => {
+            if (!createdTaskId) return;
+
+            const res = await callTool("deletePullRequestTask", {
+                repoSlug: TEST_REPO,
+                pullRequestId: TEST_PR_ID,
+                taskId: createdTaskId
+            });
+
+            expect(res.status).toBe("COMPLETED");
+            expect(res.message).toContain("deleted");
         });
     });
 

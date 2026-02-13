@@ -15,8 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Dual pagination: Cloud (`page`/`pagelen`/`next`) and DC (`start`/`limit`/`isLastPage`/`nextPageStart`)
   - DC-aware request bodies for pull requests (`fromRef`/`toRef`), comments (`text` + `anchor`), and comment updates
   - Self-hosted URLs automatically get `/rest/api/latest` appended
+- **DC task support via blocker-comments**: tasks on Data Center use the `/blocker-comments` API (introduced in Bitbucket 7.2, the only option since 8.0+)
+  - Full CRUD: list, create, get, update, delete blocker-comments as tasks
+  - Optimistic concurrency: update and delete automatically fetch the current `version` before writing
+  - `PathBuilder` returns `/blocker-comments` on DC, `/tasks` on Cloud — transparent to callers
 - **Ref tools**: `listBranches` and `listTags` with platform-aware filtering (`q=` for Cloud, `filterText=` for DC)
 - **Structured content**: `toMcpResult()` now returns `structuredContent` alongside text blocks, satisfying MCP SDK output schema validation
+- **Compatibility matrix** in README: Bitbucket DC v8.x, v9.x, and v10.x explicitly documented as supported
 
 ### Changed
 

@@ -139,6 +139,23 @@ export interface BitbucketTask {
     [key: string]: unknown;
 }
 
+// ── DC Blocker Comments (task equivalent) ────────────────────────────────
+
+export interface BitbucketBlockerComment {
+    id: number;
+    version: number;
+    text: string;
+    state: TaskState;
+    severity: "BLOCKER";
+    author: { name: string; displayName: string; slug?: string; id?: number; [key: string]: unknown };
+    createdDate: number;
+    updatedDate: number;
+    permittedOperations?: { editable?: boolean; transitionable?: boolean; deletable?: boolean };
+    comments?: unknown[];
+    threadResolved?: boolean;
+    [key: string]: unknown;
+}
+
 // ── PR Diff ──────────────────────────────────────────────────────────────
 
 export interface BitbucketDiffStat {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 
-import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString, detectPlatform } from "../../../src/bitbucket/utils.js";
+import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString, detectPlatform, PathBuilder } from "../../../src/bitbucket/utils.js";
 
 describe("detectPlatform", () => {
     it("should detect bitbucket.org as cloud", () => {
@@ -111,5 +111,31 @@ describe("buildQueryString", () => {
 
     it("should handle boolean values", () => {
         expect(buildQueryString({ all: true })).toBe("?all=true");
+    });
+});
+
+describe("PathBuilder", () => {
+    describe("Cloud", () => {
+        const paths = new PathBuilder("cloud");
+
+        it("should use /tasks path for pullRequestTasks", () => {
+            expect(paths.pullRequestTasks("ws", "repo", 1)).toBe("/repositories/ws/repo/pullrequests/1/tasks");
+        });
+
+        it("should use /tasks/{id} path for pullRequestTask", () => {
+            expect(paths.pullRequestTask("ws", "repo", 1, 42)).toBe("/repositories/ws/repo/pullrequests/1/tasks/42");
+        });
+    });
+
+    describe("Data Center", () => {
+        const paths = new PathBuilder("datacenter");
+
+        it("should use /blocker-comments path for pullRequestTasks", () => {
+            expect(paths.pullRequestTasks("PL", "my-repo", 1)).toBe("/projects/PL/repos/my-repo/pull-requests/1/blocker-comments");
+        });
+
+        it("should use /blocker-comments/{id} path for pullRequestTask", () => {
+            expect(paths.pullRequestTask("PL", "my-repo", 1, 42)).toBe("/projects/PL/repos/my-repo/pull-requests/1/blocker-comments/42");
+        });
     });
 });

@@ -186,12 +186,14 @@ export class PathBuilder {
         return `${this.pullRequest(ws, repoSlug, prId)}/patch`;
     }
 
-    /** Path for PR tasks. */
+    /** Path for PR tasks (Cloud) or blocker-comments (DC). */
     pullRequestTasks(ws: string, repoSlug: string, prId: number): string {
-        return `${this.pullRequest(ws, repoSlug, prId)}/tasks`;
+        return this.isCloud
+            ? `${this.pullRequest(ws, repoSlug, prId)}/tasks`
+            : `${this.pullRequest(ws, repoSlug, prId)}/blocker-comments`;
     }
 
-    /** Path for a specific PR task. */
+    /** Path for a specific PR task (Cloud) or blocker-comment (DC). */
     pullRequestTask(ws: string, repoSlug: string, prId: number, taskId: number): string {
         return `${this.pullRequestTasks(ws, repoSlug, prId)}/${taskId}`;
     }

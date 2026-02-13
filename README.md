@@ -4,6 +4,17 @@ A local MCP (Model Context Protocol) server for Bitbucket that provides AI assis
 
 Works with both **Bitbucket Cloud** and **Bitbucket Server/Data Center** instances.
 
+## Compatibility
+
+| Platform | Versions | Status |
+|----------|----------|--------|
+| Bitbucket Cloud | Current | ✅ Fully supported |
+| Bitbucket Data Center | 8.x | ✅ Fully supported |
+| Bitbucket Data Center | 9.x | ✅ Fully supported |
+| Bitbucket Data Center | 10.x | ✅ Fully supported |
+
+> **Note:** Tasks on Data Center use the blocker-comments API (`/blocker-comments`) introduced in Bitbucket 7.2. The legacy `/tasks` endpoint was removed in Bitbucket 9.0. This MCP server uses the modern blocker-comments API, which is the only option on DC 8.0+.
+
 ## Features
 
 - **Dual platform** — full support for both Bitbucket Cloud and Bitbucket Server/Data Center APIs
@@ -147,13 +158,15 @@ Unless noted otherwise, listing tools accept the following optional parameters:
 
 ### Pull Request Task Operations
 
+Tasks on Cloud use the standard tasks API. On Data Center, tasks are implemented via blocker-comments (`/blocker-comments`), which is the canonical replacement since Bitbucket 7.2+.
+
 | Tool | Description |
 |------|-------------|
 | `getPullRequestTasks` | List tasks on a pull request |
 | `createPullRequestTask` | Create a task on a pull request |
 | `getPullRequestTask` | Get a specific task |
-| `updatePullRequestTask` | Update a task (content, state) |
-| `deletePullRequestTask` | Delete a task |
+| `updatePullRequestTask` | Update a task (content, state). On DC, version is fetched automatically for optimistic concurrency |
+| `deletePullRequestTask` | Delete a task. On DC, version is fetched automatically for optimistic concurrency |
 
 ### Branch & Tag Operations
 
