@@ -22,6 +22,14 @@ describe("detectPlatform", () => {
     it("should detect self-hosted URL with REST path as datacenter", () => {
         expect(detectPlatform("https://bitbucket.mycompany.com/rest/api/latest")).toBe("datacenter");
     });
+
+    it("should detect localhost URL with /2.0 path as cloud", () => {
+        expect(detectPlatform("http://localhost:7990/2.0")).toBe("cloud");
+    });
+
+    it("should detect proxy URL with /2.0 path as cloud", () => {
+        expect(detectPlatform("https://proxy.mycompany.com/2.0")).toBe("cloud");
+    });
 });
 
 describe("normalizeBaseUrl", () => {
@@ -55,6 +63,10 @@ describe("normalizeBaseUrl", () => {
 
     it("should handle bare bitbucket.org without path", () => {
         expect(normalizeBaseUrl("https://bitbucket.org")).toBe("https://api.bitbucket.org/2.0");
+    });
+
+    it("should keep /2.0 URL unchanged for proxy or mock servers", () => {
+        expect(normalizeBaseUrl("http://localhost:7990/2.0")).toBe("http://localhost:7990/2.0");
     });
 });
 

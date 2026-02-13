@@ -185,6 +185,18 @@ pnpm run test
 pnpm run dev   # Run with tsx in dev mode
 ```
 
+### Integration Tests
+
+Integration tests run against a lightweight Docker mock server that stubs both Bitbucket Cloud and Data Center REST APIs:
+
+```bash
+pnpm run test:integration
+```
+
+The mock server starts in under 1 second and provides deterministic responses with pre-populated fixtures (projects, repositories, pull requests, comments, tasks/blocker-comments, branches, tags).
+
+> **Note:** Atlassian publishes an official Bitbucket Data Center Docker image ([`atlassian/bitbucket`](https://hub.docker.com/r/atlassian/bitbucket)) that can be used for manual smoke testing against a real instance. However, it requires ~2 GB RAM, takes 1–3 minutes to start, and needs a license — so it is not used for automated tests.
+
 ## License
 
 MIT

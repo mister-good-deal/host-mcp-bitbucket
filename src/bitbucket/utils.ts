@@ -11,6 +11,9 @@ export function detectPlatform(url: string): BitbucketPlatform {
 
     if ((/^https?:\/\/api\.bitbucket\.org/i).test(normalized)) return "cloud";
 
+    // URLs containing the Cloud REST API /2.0 path (e.g. proxies or mock servers)
+    if ((/\/2\.0(\/|$)/).test(normalized)) return "cloud";
+
     return "datacenter";
 }
 
@@ -30,6 +33,9 @@ export function normalizeBaseUrl(url: string): string {
     if ((/^https?:\/\/api\.bitbucket\.org(\/|$)/i).test(normalized)) {
         return normalized.endsWith("/2.0") ? normalized : "https://api.bitbucket.org/2.0";
     }
+
+    // URLs with Cloud API /2.0 path (e.g. proxy or mock server) — keep as-is
+    if ((/\/2\.0(\/|$)/).test(normalized)) return normalized;
 
     // Self-hosted: add /rest/api/latest if no REST path is already present
     if (!(/\/rest\/api\//i).test(normalized)) return `${normalized}/rest/api/latest`;

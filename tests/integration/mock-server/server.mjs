@@ -3,8 +3,16 @@
 /**
  * Mock Bitbucket REST API server for integration testing.
  *
- * Stubs the Bitbucket Cloud 2.0 API endpoints with deterministic responses.
- * Runs as a standalone HTTP server in Docker, no external dependencies required.
+ * Stubs both Bitbucket Cloud 2.0 API and Data Center REST API endpoints
+ * with deterministic responses. Runs as a standalone HTTP server in Docker.
+ *
+ * Cloud paths:  /2.0/...
+ * DC paths:     /rest/api/latest/...
+ *
+ * NOTE: Atlassian publishes an official Bitbucket DC Docker image
+ * (atlassian/bitbucket — https://hub.docker.com/r/atlassian/bitbucket)
+ * but it requires ~2 GB RAM, 1-3 min startup, and a license.
+ * This lightweight mock starts in <1s with deterministic fixtures.
  */
 
 import { createServer } from "node:http";
@@ -177,11 +185,189 @@ const STATUSES = [
     }
 ];
 
-// Track mutable state for write operations
+// Track mutable state for write operations (Cloud)
 let nextCommentId = 3;
 let nextTaskId = 2;
 const dynamicComments = [...COMMENTS];
 const dynamicTasks = [...TASKS];
+
+// ── DC Fixtures ──────────────────────────────────────────────────────────
+
+const DC_PROJECT = {
+    key: "TEST",
+    id: 1,
+    name: "Test Project",
+    description: "Integration test project",
+    public: true,
+    type: "NORMAL",
+    links: { self: [{ href: "http://localhost:7990/projects/TEST" }] }
+};
+
+const DC_APP_PROPERTIES = {
+    version: "8.19.25",
+    buildNumber: "8019025",
+    buildDate: "1700000000000",
+    displayName: "Bitbucket"
+};
+
+const DC_USER = {
+    name: "test-admin",
+    emailAddress: "admin@test.com",
+    active: true,
+    displayName: "Test Admin",
+    id: 1,
+    slug: "test-admin",
+    type: "NORMAL",
+    links: { self: [{ href: "http://localhost:7990/users/test-admin" }] }
+};
+
+const DC_REPOSITORIES = [
+    {
+        slug: "test-repo",
+        id: 1,
+        name: "test-repo",
+        description: "A test repository",
+        state: "AVAILABLE",
+        public: true,
+        project: DC_PROJECT,
+        links: { self: [{ href: "http://localhost:7990/projects/TEST/repos/test-repo" }],
+            clone: [{ href: "http://localhost:7990/scm/TEST/test-repo.git", name: "http" }] }
+    },
+    {
+        slug: "another-repo",
+        id: 2,
+        name: "another-repo",
+        description: "Another test repository",
+        state: "AVAILABLE",
+        public: false,
+        project: DC_PROJECT,
+        links: { self: [{ href: "http://localhost:7990/projects/TEST/repos/another-repo" }] }
+    }
+];
+
+const DC_PULL_REQUESTS = [
+    {
+        id: 1,
+        title: "Add new feature",
+        description: "This PR adds a new feature",
+        state: "OPEN",
+        open: true,
+        closed: false,
+        author: { user: DC_USER, role: "AUTHOR", approved: false },
+        reviewers: [],
+        participants: [],
+        fromRef: {
+            id: "refs/heads/feature/new-feature",
+            displayId: "feature/new-feature",
+            latestCommit: "abc123"
+        },
+        toRef: {
+            id: "refs/heads/master",
+            displayId: "master",
+            latestCommit: "def456"
+        },
+        createdDate: 1700000000000,
+        updatedDate: 1700100000000,
+        links: { self: [{ href: "http://localhost:7990/projects/TEST/repos/test-repo/pull-requests/1" }] }
+    }
+];
+
+const DC_COMMENTS = [
+    {
+        id: 1,
+        version: 0,
+        text: "Looks good!",
+        author: DC_USER,
+        createdDate: 1700000000000,
+        updatedDate: 1700000000000,
+        comments: [],
+        severity: "NORMAL",
+        state: "OPEN",
+        permittedOperations: { editable: true, deletable: true }
+    }
+];
+
+const DC_ACTIVITIES = [
+    {
+        id: 1,
+        action: "COMMENTED",
+        comment: DC_COMMENTS[0],
+        createdDate: 1700000000000,
+        user: DC_USER
+    },
+    {
+        id: 2,
+        action: "OPENED",
+        createdDate: 1699900000000,
+        user: DC_USER
+    }
+];
+
+const DC_BLOCKER_COMMENTS = [
+    {
+        id: 100,
+        version: 0,
+        text: "Fix this blocker issue",
+        author: DC_USER,
+        createdDate: 1700000000000,
+        updatedDate: 1700000000000,
+        comments: [],
+        threadResolved: false,
+        severity: "BLOCKER",
+        state: "OPEN",
+        permittedOperations: { editable: true, transitionable: true, deletable: true }
+    }
+];
+
+const DC_COMMITS = [
+    {
+        id: "abc123def456",
+        displayId: "abc123d",
+        message: "Add new feature",
+        author: { name: "Test Admin", emailAddress: "admin@test.com" },
+        authorTimestamp: 1700000000000,
+        committerTimestamp: 1700000000000,
+        parents: [{ id: "000111", displayId: "000111" }]
+    }
+];
+
+const DC_BRANCHES = [
+    { id: "refs/heads/master", displayId: "master", type: "BRANCH", latestCommit: "abc123", isDefault: true },
+    { id: "refs/heads/develop", displayId: "develop", type: "BRANCH", latestCommit: "def456", isDefault: false },
+    { id: "refs/heads/feature/new-feature", displayId: "feature/new-feature", type: "BRANCH", latestCommit: "ghi789", isDefault: false }
+];
+
+const DC_TAGS = [
+    { id: "refs/tags/v1.0.0", displayId: "v1.0.0", type: "TAG", latestCommit: "aaa111" },
+    { id: "refs/tags/v2.0.0", displayId: "v2.0.0", type: "TAG", latestCommit: "bbb222" }
+];
+
+const DC_DIFF = `diff --git a/src/index.ts b/src/index.ts
+index abc123..def456 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -1,3 +1,5 @@
+ console.log("hello");
++console.log("new line");
++console.log("another line");
+`;
+
+const DC_CHANGES = [
+    {
+        contentId: "abc123",
+        fromContentId: "def456",
+        path: { toString: "src/index.ts", name: "index.ts", parent: "src", components: ["src", "index.ts"] },
+        type: "MODIFY",
+        nodeType: "FILE"
+    }
+];
+
+// Track mutable state for DC write operations
+let dcNextCommentId = 2;
+let dcNextBlockerId = 101;
+const dcDynamicComments = [...DC_COMMENTS];
+const dcDynamicBlockers = [...DC_BLOCKER_COMMENTS];
+let dcPullRequest = { ...DC_PULL_REQUESTS[0] };
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -669,6 +855,513 @@ const server = createServer(async(req, res) => {
         dynamicTasks.splice(idx, 1);
         res.writeHead(204);
         res.end();
+
+        return;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // ██  Data Center REST API routes  (/rest/api/latest/...) ██
+    // ══════════════════════════════════════════════════════════
+
+    const DC = "/rest/api/latest";
+
+    /** DC-style paginated response. */
+    function dcPaginate(values, query) {
+        const limit = Math.min(parseInt(query.limit ?? "25", 10), 100);
+        const start = parseInt(query.start ?? "0", 10);
+        const paged = values.slice(start, start + limit);
+        const isLastPage = start + limit >= values.length;
+
+        return {
+            size: values.length,
+            limit,
+            start,
+            isLastPage,
+            values: paged,
+            ...(isLastPage ? {} : { nextPageStart: start + limit })
+        };
+    }
+
+    // ── DC: Application properties (auth/connectivity check) ─
+    if (path === `${DC}/application-properties` && method === "GET") {
+        json(res, 200, DC_APP_PROPERTIES);
+
+        return;
+    }
+
+    // ── DC: Projects ─────────────────────────────────────────
+    const dcProjectMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)$/);
+
+    if (dcProjectMatch && method === "GET") {
+        if (dcProjectMatch[1] !== "TEST") {
+            json(res, 404, { errors: [{ message: `Project ${dcProjectMatch[1]} does not exist.` }] });
+
+            return;
+        }
+
+        json(res, 200, DC_PROJECT);
+
+        return;
+    }
+
+    // ── DC: Repositories list ────────────────────────────────
+    const dcRepoListMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos$/);
+
+    if (dcRepoListMatch && method === "GET") {
+        if (dcRepoListMatch[1] !== "TEST") {
+            json(res, 404, { errors: [{ message: "Project not found" }] });
+
+            return;
+        }
+
+        let repos = DC_REPOSITORIES;
+
+        if (query.name) {
+            repos = repos.filter(r => r.name.toLowerCase().includes(query.name.toLowerCase()));
+        }
+
+        json(res, 200, dcPaginate(repos, query));
+
+        return;
+    }
+
+    // ── DC: Global repos endpoint (used for name filtering) ──
+    if (path === `${DC}/repos` && method === "GET") {
+        let repos = DC_REPOSITORIES;
+
+        if (query.name) {
+            repos = repos.filter(r => r.name.toLowerCase().includes(query.name.toLowerCase()));
+        }
+
+        json(res, 200, dcPaginate(repos, query));
+
+        return;
+    }
+
+    // ── DC: Repository get ───────────────────────────────────
+    const dcRepoGetMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)$/);
+
+    if (dcRepoGetMatch && method === "GET") {
+        const repo = DC_REPOSITORIES.find(r => r.slug === dcRepoGetMatch[2]);
+
+        if (!repo) {
+            json(res, 404, { errors: [{ message: `Repository ${dcRepoGetMatch[2]} does not exist.` }] });
+
+            return;
+        }
+
+        json(res, 200, repo);
+
+        return;
+    }
+
+    // ── DC: Branches ─────────────────────────────────────────
+    const dcBranchMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/branches$/);
+
+    if (dcBranchMatch && method === "GET") {
+        let branches = DC_BRANCHES;
+
+        if (query.filterText) {
+            branches = branches.filter(b => b.displayId.toLowerCase().includes(query.filterText.toLowerCase()));
+        }
+
+        json(res, 200, dcPaginate(branches, query));
+
+        return;
+    }
+
+    // ── DC: Tags ─────────────────────────────────────────────
+    const dcTagMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/tags$/);
+
+    if (dcTagMatch && method === "GET") {
+        let tags = DC_TAGS;
+
+        if (query.filterText) {
+            tags = tags.filter(t => t.displayId.toLowerCase().includes(query.filterText.toLowerCase()));
+        }
+
+        json(res, 200, dcPaginate(tags, query));
+
+        return;
+    }
+
+    // ── DC: Pull Requests list ───────────────────────────────
+    const dcPRListMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests$/);
+
+    if (dcPRListMatch && method === "GET") {
+        json(res, 200, dcPaginate([dcPullRequest], query));
+
+        return;
+    }
+
+    if (dcPRListMatch && method === "POST") {
+        const body = await readBody(req);
+        const newPR = {
+            ...DC_PULL_REQUESTS[0],
+            id: 99,
+            title: body.title ?? "New PR",
+            description: body.description ?? "",
+            state: "OPEN",
+            open: true,
+            closed: false,
+            fromRef: body.fromRef ?? DC_PULL_REQUESTS[0].fromRef,
+            toRef: body.toRef ?? DC_PULL_REQUESTS[0].toRef,
+            createdDate: Date.now(),
+            updatedDate: Date.now()
+        };
+
+        json(res, 201, newPR);
+
+        return;
+    }
+
+    // ── DC: Pull Request get/update ──────────────────────────
+    const dcPRGetMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)$/);
+
+    if (dcPRGetMatch && method === "GET") {
+        const prId = parseInt(dcPRGetMatch[3], 10);
+
+        if (prId !== dcPullRequest.id) {
+            json(res, 404, { errors: [{ message: `Pull request ${prId} does not exist.` }] });
+
+            return;
+        }
+
+        json(res, 200, dcPullRequest);
+
+        return;
+    }
+
+    if (dcPRGetMatch && method === "PUT") {
+        const prId = parseInt(dcPRGetMatch[3], 10);
+
+        if (prId !== dcPullRequest.id) {
+            json(res, 404, { errors: [{ message: `Pull request ${prId} does not exist.` }] });
+
+            return;
+        }
+
+        const body = await readBody(req);
+
+        if (body.title !== undefined) dcPullRequest.title = body.title;
+
+        if (body.description !== undefined) dcPullRequest.description = body.description;
+
+        dcPullRequest.updatedDate = Date.now();
+        json(res, 200, { ...dcPullRequest });
+
+        return;
+    }
+
+    // ── DC: PR .diff (raw) ───────────────────────────────────
+    const dcDiffMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\.diff$/);
+
+    if (dcDiffMatch && method === "GET") {
+        text(res, 200, DC_DIFF);
+
+        return;
+    }
+
+    // ── DC: PR changes (diffstat) ────────────────────────────
+    const dcChangesMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/changes$/);
+
+    if (dcChangesMatch && method === "GET") {
+        json(res, 200, dcPaginate(DC_CHANGES, query));
+
+        return;
+    }
+
+    // ── DC: PR Activities ────────────────────────────────────
+    const dcActivityMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/activities$/);
+
+    if (dcActivityMatch && method === "GET") {
+        json(res, 200, dcPaginate(DC_ACTIVITIES, query));
+
+        return;
+    }
+
+    // ── DC: PR Commits ───────────────────────────────────────
+    const dcCommitsMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/commits$/);
+
+    if (dcCommitsMatch && method === "GET") {
+        json(res, 200, dcPaginate(DC_COMMITS, query));
+
+        return;
+    }
+
+    // ── DC: PR Approve ───────────────────────────────────────
+    const dcApproveMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/approve$/);
+
+    if (dcApproveMatch && method === "POST") {
+        json(res, 200, { user: DC_USER, role: "REVIEWER", approved: true, status: "APPROVED" });
+
+        return;
+    }
+
+    if (dcApproveMatch && method === "DELETE") {
+        json(res, 200, { user: DC_USER, role: "REVIEWER", approved: false, status: "UNAPPROVED" });
+
+        return;
+    }
+
+    // ── DC: PR Request Changes ───────────────────────────────
+    const dcRequestChangesMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/request-changes$/);
+
+    if (dcRequestChangesMatch && method === "POST") {
+        json(res, 200, { user: DC_USER, role: "REVIEWER", status: "NEEDS_WORK" });
+
+        return;
+    }
+
+    if (dcRequestChangesMatch && method === "DELETE") {
+        json(res, 200, { user: DC_USER, role: "REVIEWER", status: "UNAPPROVED" });
+
+        return;
+    }
+
+    // ── DC: PR Decline ───────────────────────────────────────
+    const dcDeclineMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/decline$/);
+
+    if (dcDeclineMatch && method === "POST") {
+        json(res, 200, { ...dcPullRequest, state: "DECLINED", open: false, closed: true });
+
+        return;
+    }
+
+    // ── DC: PR Merge ─────────────────────────────────────────
+    const dcMergeMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/merge$/);
+
+    if (dcMergeMatch && method === "POST") {
+        json(res, 200, { ...dcPullRequest, state: "MERGED", open: false, closed: true });
+
+        return;
+    }
+
+    // ── DC: PR Comments ──────────────────────────────────────
+    const dcCommentsMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/comments$/);
+
+    if (dcCommentsMatch && method === "GET") {
+        json(res, 200, dcPaginate(dcDynamicComments, query));
+
+        return;
+    }
+
+    if (dcCommentsMatch && method === "POST") {
+        const body = await readBody(req);
+        const newComment = {
+            id: dcNextCommentId++,
+            version: 0,
+            text: body.text ?? "",
+            author: DC_USER,
+            createdDate: Date.now(),
+            updatedDate: Date.now(),
+            comments: [],
+            severity: "NORMAL",
+            state: "OPEN",
+            permittedOperations: { editable: true, deletable: true }
+        };
+
+        if (body.anchor) newComment.anchor = body.anchor;
+
+        if (body.parent) newComment.parent = body.parent;
+
+        dcDynamicComments.push(newComment);
+        json(res, 201, newComment);
+
+        return;
+    }
+
+    const dcCommentGetMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/comments\/(\d+)$/);
+
+    if (dcCommentGetMatch && method === "GET") {
+        const comment = dcDynamicComments.find(c => c.id === parseInt(dcCommentGetMatch[4], 10));
+
+        if (!comment) {
+            json(res, 404, { errors: [{ message: "Comment not found" }] });
+
+            return;
+        }
+
+        json(res, 200, comment);
+
+        return;
+    }
+
+    if (dcCommentGetMatch && method === "PUT") {
+        const commentId = parseInt(dcCommentGetMatch[4], 10);
+        const comment = dcDynamicComments.find(c => c.id === commentId);
+
+        if (!comment) {
+            json(res, 404, { errors: [{ message: "Comment not found" }] });
+
+            return;
+        }
+
+        const body = await readBody(req);
+
+        if (body.text !== undefined) comment.text = body.text;
+
+        comment.version++;
+        comment.updatedDate = Date.now();
+        json(res, 200, { ...comment });
+
+        return;
+    }
+
+    if (dcCommentGetMatch && method === "DELETE") {
+        const commentId = parseInt(dcCommentGetMatch[4], 10);
+        const idx = dcDynamicComments.findIndex(c => c.id === commentId);
+
+        if (idx < 0) {
+            json(res, 404, { errors: [{ message: "Comment not found" }] });
+
+            return;
+        }
+
+        dcDynamicComments.splice(idx, 1);
+        res.writeHead(204);
+        res.end();
+
+        return;
+    }
+
+    // ── DC: Comment resolve/reopen ───────────────────────────
+    const dcCommentResolveMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/comments\/(\d+)\/resolve$/);
+
+    if (dcCommentResolveMatch && method === "PUT") {
+        const comment = dcDynamicComments.find(c => c.id === parseInt(dcCommentResolveMatch[4], 10));
+
+        if (!comment) {
+            json(res, 404, { errors: [{ message: "Comment not found" }] });
+
+            return;
+        }
+
+        comment.state = "RESOLVED";
+        comment.version++;
+        json(res, 200, { ...comment });
+
+        return;
+    }
+
+    if (dcCommentResolveMatch && method === "DELETE") {
+        const comment = dcDynamicComments.find(c => c.id === parseInt(dcCommentResolveMatch[4], 10));
+
+        if (!comment) {
+            json(res, 404, { errors: [{ message: "Comment not found" }] });
+
+            return;
+        }
+
+        comment.state = "OPEN";
+        comment.version++;
+        res.writeHead(204);
+        res.end();
+
+        return;
+    }
+
+    // ── DC: Blocker-comments (tasks) ─────────────────────────
+    const dcBlockerListMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/blocker-comments$/);
+
+    if (dcBlockerListMatch && method === "GET") {
+        json(res, 200, dcPaginate(dcDynamicBlockers, query));
+
+        return;
+    }
+
+    if (dcBlockerListMatch && method === "POST") {
+        const body = await readBody(req);
+        const newBlocker = {
+            id: dcNextBlockerId++,
+            version: 0,
+            text: body.text ?? "",
+            author: DC_USER,
+            createdDate: Date.now(),
+            updatedDate: Date.now(),
+            comments: [],
+            threadResolved: false,
+            severity: body.severity ?? "BLOCKER",
+            state: "OPEN",
+            permittedOperations: { editable: true, transitionable: true, deletable: true }
+        };
+
+        dcDynamicBlockers.push(newBlocker);
+        json(res, 201, newBlocker);
+
+        return;
+    }
+
+    const dcBlockerGetMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/blocker-comments\/(\d+)$/);
+
+    if (dcBlockerGetMatch && method === "GET") {
+        const blocker = dcDynamicBlockers.find(b => b.id === parseInt(dcBlockerGetMatch[4], 10));
+
+        if (!blocker) {
+            json(res, 404, { errors: [{ message: "Blocker comment not found" }] });
+
+            return;
+        }
+
+        json(res, 200, blocker);
+
+        return;
+    }
+
+    if (dcBlockerGetMatch && method === "PUT") {
+        const blockerId = parseInt(dcBlockerGetMatch[4], 10);
+        const blocker = dcDynamicBlockers.find(b => b.id === blockerId);
+
+        if (!blocker) {
+            json(res, 404, { errors: [{ message: "Blocker comment not found" }] });
+
+            return;
+        }
+
+        const body = await readBody(req);
+
+        if (body.text !== undefined) blocker.text = body.text;
+
+        if (body.state !== undefined) blocker.state = body.state;
+
+        blocker.version++;
+        blocker.updatedDate = Date.now();
+        json(res, 200, { ...blocker });
+
+        return;
+    }
+
+    if (dcBlockerGetMatch && method === "DELETE") {
+        const blockerId = parseInt(dcBlockerGetMatch[4], 10);
+        const idx = dcDynamicBlockers.findIndex(b => b.id === blockerId);
+
+        if (idx < 0) {
+            json(res, 404, { errors: [{ message: "Blocker comment not found" }] });
+
+            return;
+        }
+
+        dcDynamicBlockers.splice(idx, 1);
+        res.writeHead(204);
+        res.end();
+
+        return;
+    }
+
+    // ── DC: PR Statuses (no direct equivalent — return empty) ─
+    const dcStatusesMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/statuses$/);
+
+    if (dcStatusesMatch && method === "GET") {
+        json(res, 200, dcPaginate([], query));
+
+        return;
+    }
+
+    // ── DC: PR Patch (not supported on DC) ───────────────────
+    const dcPatchMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos\/([^\/]+)\/pull-requests\/(\d+)\/patch$/);
+
+    if (dcPatchMatch && method === "GET") {
+        json(res, 404, { errors: [{ message: "Patch is not available on Data Center." }] });
 
         return;
     }
