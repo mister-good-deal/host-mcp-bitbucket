@@ -1,19 +1,18 @@
 /**
- * Integration tests for Bitbucket Data Center REST API paths.
+ * Integration tests for Bitbucket Cloud API tool handlers.
  *
- * These tests run against the same Docker mock server as Cloud tests,
- * but use a DC-configured client (base URL without /2.0) so that the
- * platform detection, path building, and tool handlers follow DC code paths.
+ * These tests exercise every registered tool via `callTool()` against the
+ * Docker mock server running on port 7990 with Cloud paths (/2.0/...).
  *
- * The mock server handles both Cloud (/2.0/...) and DC (/rest/api/latest/...)
- * routes simultaneously on the same port.
+ * Mirror of datacenter.test.ts — ensures 100% tool coverage on the Cloud
+ * code path.
  */
 
 import { describe, it, expect, beforeAll } from "@jest/globals";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { BitbucketClient } from "../../src/bitbucket/client.js";
-import { detectPlatform, normalizeBaseUrl, PathBuilder } from "../../src/bitbucket/utils.js";
+import { PathBuilder } from "../../src/bitbucket/utils.js";
 import { registerWorkspaceTools } from "../../src/tools/workspace.js";
 import { registerRepositoryTools } from "../../src/tools/repositories.js";
 import { registerPullRequestTools } from "../../src/tools/pull-requests.js";
@@ -22,22 +21,21 @@ import { registerDiffTools } from "../../src/tools/diffs.js";
 import { registerTaskTools } from "../../src/tools/tasks.js";
 import { registerRefTools } from "../../src/tools/refs.js";
 
-// ── DC-specific config (mock on same port, but without /2.0 path) ───────
+// ── Cloud-specific config ───────────────────────────────────────────────
 
-const DC_URL = "http://localhost:7990"; // triggers datacenter detection
-const DC_TOKEN = "test-token";
-const DC_WORKSPACE = "TEST"; // matches DC_PROJECT.key in mock
-const DC_REPO = "test-repo";
-const DC_PR_ID = 1;
+const CLOUD_URL = "http://localhost:7990/2.0";
+const CLOUD_TOKEN = "test-token";
+const CLOUD_WORKSPACE = "test-workspace";
+const CLOUD_REPO = "test-repo";
+const CLOUD_PR_ID = 1;
 
-const platform = detectPlatform(DC_URL);
-const paths = new PathBuilder(platform);
+const paths = new PathBuilder("cloud");
 
 const client = new BitbucketClient({
-    baseUrl: normalizeBaseUrl(DC_URL),
-    token: DC_TOKEN,
+    baseUrl: CLOUD_URL,
+    token: CLOUD_TOKEN,
     timeout: 15_000,
-    platform
+    platform: "cloud"
 });
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -62,7 +60,7 @@ function parseToolResult(raw: unknown): ToolResponse {
 
 // ── Test suite ───────────────────────────────────────────────────────────
 
-describe("Integration: Bitbucket Data Center (mock)", () => {
+describe("Integration: Bitbucket Cloud (mock)", () => {
     let toolHandlers: Map<string, (args: Record<string, unknown>) => Promise<unknown>>;
 
     beforeAll(async() => {
@@ -71,7 +69,7 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
         while (Date.now() - start < 30_000) {
             try {
-                await client.get("/application-properties");
+                await client.get("/user");
                 break;
             } catch {
                 await new Promise(r => setTimeout(r, 1000));
@@ -79,7 +77,7 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
         }
 
         // Register all tools and capture handlers
-        const server = new McpServer({ name: "dc-integration-test", version: "0.0.1" });
+        const server = new McpServer({ name: "cloud-integration-test", version: "0.0.1" });
 
         toolHandlers = new Map();
 
@@ -94,13 +92,13 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             return originalRegisterTool(...(args as Parameters<typeof originalRegisterTool>));
         }) as typeof server.registerTool;
 
-        registerWorkspaceTools(server, client, paths, DC_WORKSPACE);
-        registerRepositoryTools(server, client, paths, DC_WORKSPACE);
-        registerPullRequestTools(server, client, paths, DC_WORKSPACE);
-        registerCommentTools(server, client, paths, DC_WORKSPACE);
-        registerDiffTools(server, client, paths, DC_WORKSPACE);
-        registerTaskTools(server, client, paths, DC_WORKSPACE);
-        registerRefTools(server, client, paths, DC_WORKSPACE);
+        registerWorkspaceTools(server, client, paths, CLOUD_WORKSPACE);
+        registerRepositoryTools(server, client, paths, CLOUD_WORKSPACE);
+        registerPullRequestTools(server, client, paths, CLOUD_WORKSPACE);
+        registerCommentTools(server, client, paths, CLOUD_WORKSPACE);
+        registerDiffTools(server, client, paths, CLOUD_WORKSPACE);
+        registerTaskTools(server, client, paths, CLOUD_WORKSPACE);
+        registerRefTools(server, client, paths, CLOUD_WORKSPACE);
     }, 60_000);
 
     async function callTool(name: string, args: Record<string, unknown> = {}): Promise<ToolResponse> {
@@ -111,42 +109,35 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
         return parseToolResult(await handler(args));
     }
 
-    // ── Platform detection ───────────────────────────────────────────
-
-    it("should detect platform as datacenter", () => {
-        expect(platform).toBe("datacenter");
-    });
-
-    it("should normalise URL with /rest/api/latest", () => {
-        expect(normalizeBaseUrl(DC_URL)).toBe("http://localhost:7990/rest/api/latest");
-    });
-
     // ── Workspace / Connectivity ─────────────────────────────────────
 
     describe("getCurrentUser", () => {
-        it("should return application properties (DC auth check)", async() => {
+        it("should return the current user", async() => {
             const res = await callTool("getCurrentUser");
 
             expect(res.status).toBe("COMPLETED");
             expect(res.message).toContain("Authenticated");
+
+            const user = res.result as Record<string, unknown>;
+
+            expect(user.nickname).toBe("admin");
         });
     });
 
     describe("getWorkspace", () => {
-        it("should return project details for the TEST project", async() => {
+        it("should return workspace details", async() => {
             const res = await callTool("getWorkspace");
 
             expect(res.status).toBe("COMPLETED");
 
-            const result = res.result as Record<string, unknown>;
+            const ws = res.result as Record<string, unknown>;
 
-            expect(result.key).toBe("TEST");
-            expect(result.name).toBe("Test Project");
-            expect(result.type).toBe("NORMAL");
+            expect(ws.slug).toBe("test-workspace");
+            expect(ws.name).toBe("Integration Test Workspace");
         });
 
-        it("should return not found for a non-existent project", async() => {
-            const res = await callTool("getWorkspace", { workspace: "NONEXISTENT" });
+        it("should return not found for a non-existent workspace", async() => {
+            const res = await callTool("getWorkspace", { workspace: "nonexistent-ws-xyz" });
 
             expect(res.status).toBe("FAILED");
         });
@@ -155,7 +146,7 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     // ── Repositories ─────────────────────────────────────────────────
 
     describe("listRepositories", () => {
-        it("should list repositories in the project", async() => {
+        it("should list repositories in the workspace", async() => {
             const res = await callTool("listRepositories", { pagelen: 10 });
 
             expect(res.status).toBe("COMPLETED");
@@ -165,31 +156,20 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             expect(Array.isArray(repos)).toBe(true);
             expect(repos.length).toBe(2);
             expect(repos[0]).toHaveProperty("slug");
-            expect(repos[0]).toHaveProperty("project");
-        });
-
-        it("should filter repositories by name", async() => {
-            const res = await callTool("listRepositories", { name: "another", pagelen: 10 });
-
-            expect(res.status).toBe("COMPLETED");
-
-            const repos = res.result as Array<Record<string, unknown>>;
-
-            expect(repos.length).toBe(1);
-            expect(repos[0].slug).toBe("another-repo");
+            expect(repos[0].slug).toBe("test-repo");
         });
     });
 
     describe("getRepository", () => {
         it("should return repository details", async() => {
-            const res = await callTool("getRepository", { repoSlug: DC_REPO });
+            const res = await callTool("getRepository", { repoSlug: CLOUD_REPO });
 
             expect(res.status).toBe("COMPLETED");
 
             const repo = res.result as Record<string, unknown>;
 
             expect(repo.slug).toBe("test-repo");
-            expect(repo).toHaveProperty("project");
+            expect(repo.full_name).toBe("test-workspace/test-repo");
         });
 
         it("should return not found for a non-existent repo", async() => {
@@ -203,51 +183,27 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
     describe("listBranches", () => {
         it("should list branches for a repository", async() => {
-            const res = await callTool("listBranches", { repoSlug: DC_REPO });
+            const res = await callTool("listBranches", { repoSlug: CLOUD_REPO });
 
             expect(res.status).toBe("COMPLETED");
 
             const branches = res.result as Array<Record<string, unknown>>;
 
             expect(Array.isArray(branches)).toBe(true);
-            expect(branches.length).toBe(3);
-            expect(branches[0]).toHaveProperty("displayId");
-        });
-
-        it("should filter branches by name", async() => {
-            const res = await callTool("listBranches", { repoSlug: DC_REPO, filter: "master" });
-
-            expect(res.status).toBe("COMPLETED");
-
-            const branches = res.result as Array<Record<string, unknown>>;
-
             expect(branches.length).toBeGreaterThan(0);
-            expect(branches.every(b => (b.displayId as string).toLowerCase().includes("master"))).toBe(true);
         });
     });
 
     describe("listTags", () => {
         it("should list tags for a repository", async() => {
-            const res = await callTool("listTags", { repoSlug: DC_REPO });
+            const res = await callTool("listTags", { repoSlug: CLOUD_REPO });
 
             expect(res.status).toBe("COMPLETED");
 
             const tags = res.result as Array<Record<string, unknown>>;
 
             expect(Array.isArray(tags)).toBe(true);
-            expect(tags.length).toBe(2);
-            expect(tags[0]).toHaveProperty("displayId");
-        });
-
-        it("should filter tags by name", async() => {
-            const res = await callTool("listTags", { repoSlug: DC_REPO, filter: "v1" });
-
-            expect(res.status).toBe("COMPLETED");
-
-            const tags = res.result as Array<Record<string, unknown>>;
-
-            expect(tags.length).toBe(1);
-            expect(tags[0].displayId).toBe("v1.0.0");
+            expect(tags.length).toBeGreaterThan(0);
         });
     });
 
@@ -255,7 +211,7 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
     describe("getPullRequests", () => {
         it("should list open pull requests", async() => {
-            const res = await callTool("getPullRequests", { repoSlug: DC_REPO, state: "OPEN" });
+            const res = await callTool("getPullRequests", { repoSlug: CLOUD_REPO, state: "OPEN" });
 
             expect(res.status).toBe("COMPLETED");
 
@@ -265,28 +221,28 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             expect(prs.length).toBeGreaterThan(0);
             expect(prs[0]).toHaveProperty("id");
             expect(prs[0]).toHaveProperty("title");
-            expect(prs[0]).toHaveProperty("fromRef");
-            expect(prs[0]).toHaveProperty("toRef");
+            expect(prs[0]).toHaveProperty("source");
+            expect(prs[0]).toHaveProperty("destination");
         });
     });
 
     describe("getPullRequest", () => {
         it("should return pull request details", async() => {
-            const res = await callTool("getPullRequest", { repoSlug: DC_REPO, pullRequestId: DC_PR_ID });
+            const res = await callTool("getPullRequest", { repoSlug: CLOUD_REPO, pullRequestId: CLOUD_PR_ID });
 
             expect(res.status).toBe("COMPLETED");
 
             const pr = res.result as Record<string, unknown>;
 
-            expect(pr.id).toBe(DC_PR_ID);
+            expect(pr.id).toBe(CLOUD_PR_ID);
             expect(pr.title).toBe("Add new feature");
             expect(pr.state).toBe("OPEN");
-            expect(pr).toHaveProperty("fromRef");
-            expect(pr).toHaveProperty("toRef");
+            expect(pr).toHaveProperty("source");
+            expect(pr).toHaveProperty("destination");
         });
 
         it("should return not found for a non-existent PR", async() => {
-            const res = await callTool("getPullRequest", { repoSlug: DC_REPO, pullRequestId: 999999 });
+            const res = await callTool("getPullRequest", { repoSlug: CLOUD_REPO, pullRequestId: 999999 });
 
             expect(res.status).toBe("FAILED");
         });
@@ -295,9 +251,9 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     describe("updatePullRequest", () => {
         it("should update the PR title", async() => {
             const res = await callTool("updatePullRequest", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
-                title: "Updated title via test"
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
+                title: "Updated title via Cloud test"
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -305,25 +261,15 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
             const pr = res.result as Record<string, unknown>;
 
-            expect(pr.title).toBe("Updated title via test");
-        });
-
-        it("should restore the PR title", async() => {
-            const res = await callTool("updatePullRequest", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
-                title: "Add new feature"
-            });
-
-            expect(res.status).toBe("COMPLETED");
+            expect(pr.title).toBe("Updated title via Cloud test");
         });
     });
 
     describe("getPullRequestActivity", () => {
         it("should return pull request activities", async() => {
             const res = await callTool("getPullRequestActivity", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 pagelen: 10
             });
 
@@ -333,15 +279,14 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
             expect(Array.isArray(activities)).toBe(true);
             expect(activities.length).toBeGreaterThan(0);
-            expect(activities[0]).toHaveProperty("action");
         });
     });
 
     describe("getPullRequestCommits", () => {
         it("should return pull request commits", async() => {
             const res = await callTool("getPullRequestCommits", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 pagelen: 5
             });
 
@@ -351,7 +296,7 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
             expect(Array.isArray(commits)).toBe(true);
             expect(commits.length).toBeGreaterThan(0);
-            expect(commits[0]).toHaveProperty("id");
+            expect(commits[0]).toHaveProperty("hash");
             expect(commits[0]).toHaveProperty("message");
         });
     });
@@ -361,8 +306,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     describe("approvePullRequest / unapprovePullRequest", () => {
         it("should approve the PR", async() => {
             const res = await callTool("approvePullRequest", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -371,8 +316,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
         it("should remove approval", async() => {
             const res = await callTool("unapprovePullRequest", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -383,8 +328,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     describe("requestChanges / removeChangeRequest", () => {
         it("should request changes on the PR", async() => {
             const res = await callTool("requestChanges", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -392,8 +337,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
         it("should remove the change request", async() => {
             const res = await callTool("removeChangeRequest", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -407,11 +352,11 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
         it("createPullRequest should create a new PR", async() => {
             const res = await callTool("createPullRequest", {
-                repoSlug: DC_REPO,
-                title: "DC test PR",
-                description: "Automated DC integration test",
+                repoSlug: CLOUD_REPO,
+                title: "Cloud test PR",
+                description: "Automated Cloud integration test",
                 sourceBranch: "feature/test-branch",
-                targetBranch: "master"
+                targetBranch: "main"
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -421,7 +366,7 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
 
             expect(pr.id).toBeDefined();
             expect(pr.state).toBe("OPEN");
-            expect(pr.title).toBe("DC test PR");
+            expect(pr.title).toBe("Cloud test PR");
             createdPrId = pr.id;
         });
 
@@ -429,7 +374,7 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             if (!createdPrId) return;
 
             const res = await callTool("declinePullRequest", {
-                repoSlug: DC_REPO,
+                repoSlug: CLOUD_REPO,
                 pullRequestId: createdPrId,
                 message: "Closing test PR"
             });
@@ -448,9 +393,9 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     describe("mergePullRequest", () => {
         it("should merge the PR", async() => {
             const res = await callTool("mergePullRequest", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
-                message: "Merge via DC test"
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
+                message: "Merge via Cloud test"
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -467,8 +412,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     describe("getPullRequestDiff", () => {
         it("should return a raw text diff", async() => {
             const res = await callTool("getPullRequestDiff", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -478,32 +423,31 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     });
 
     describe("getPullRequestDiffStat", () => {
-        it("should return diff statistics (changes on DC)", async() => {
+        it("should return diff statistics", async() => {
             const res = await callTool("getPullRequestDiffStat", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
 
-            const changes = res.result as Array<Record<string, unknown>>;
+            const stats = res.result as Array<Record<string, unknown>>;
 
-            expect(Array.isArray(changes)).toBe(true);
-            expect(changes.length).toBeGreaterThan(0);
-            expect(changes[0]).toHaveProperty("path");
-            expect(changes[0]).toHaveProperty("type");
+            expect(Array.isArray(stats)).toBe(true);
+            expect(stats.length).toBeGreaterThan(0);
+            expect(stats[0]).toHaveProperty("status");
         });
     });
 
     describe("getPullRequestPatch", () => {
-        it("should return an error on DC (not supported)", async() => {
+        it("should return the patch content", async() => {
             const res = await callTool("getPullRequestPatch", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
-            expect(res.status).toBe("FAILED");
-            expect(res.message).toContain("not available");
+            expect(res.status).toBe("COMPLETED");
+            expect(typeof res.result).toBe("string");
         });
     });
 
@@ -512,17 +456,31 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     describe("comments (CRUD lifecycle)", () => {
         let createdCommentId: number | undefined;
 
+        it("getPullRequestComments should list comments", async() => {
+            const res = await callTool("getPullRequestComments", {
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
+            });
+
+            expect(res.status).toBe("COMPLETED");
+
+            const comments = res.result as Array<Record<string, unknown>>;
+
+            expect(Array.isArray(comments)).toBe(true);
+            expect(comments.length).toBeGreaterThanOrEqual(1);
+        });
+
         it("addPullRequestComment should add a general comment", async() => {
             const res = await callTool("addPullRequestComment", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
-                content: "DC integration test comment"
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
+                content: "Cloud integration test comment"
             });
 
             expect(res.status).toBe("COMPLETED");
             expect(res.message).toContain("added");
 
-            const comment = res.result as { id: number; text?: string };
+            const comment = res.result as { id: number };
 
             expect(comment.id).toBeDefined();
             createdCommentId = comment.id;
@@ -532,14 +490,14 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             if (!createdCommentId) return;
 
             const res = await callTool("getPullRequestComment", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 commentId: createdCommentId
             });
 
             expect(res.status).toBe("COMPLETED");
 
-            const comment = res.result as { id: number; text?: string };
+            const comment = res.result as { id: number };
 
             expect(comment.id).toBe(createdCommentId);
         });
@@ -548,10 +506,10 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             if (!createdCommentId) return;
 
             const res = await callTool("updatePullRequestComment", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 commentId: createdCommentId,
-                content: "DC integration test comment - UPDATED"
+                content: "Cloud integration test comment - UPDATED"
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -562,8 +520,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             if (!createdCommentId) return;
 
             const res = await callTool("resolveComment", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 commentId: createdCommentId
             });
 
@@ -575,8 +533,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             if (!createdCommentId) return;
 
             const res = await callTool("reopenComment", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 commentId: createdCommentId
             });
 
@@ -588,8 +546,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             if (!createdCommentId) return;
 
             const res = await callTool("deletePullRequestComment", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 commentId: createdCommentId
             });
 
@@ -601,8 +559,8 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             if (!createdCommentId) return;
 
             const res = await callTool("getPullRequestComment", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 commentId: createdCommentId
             });
 
@@ -610,15 +568,15 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
         });
     });
 
-    // ── Tasks (blocker-comments) CRUD lifecycle ──────────────────────
+    // ── Tasks CRUD lifecycle ─────────────────────────────────────────
 
-    describe("tasks / blocker-comments (CRUD lifecycle)", () => {
+    describe("tasks (CRUD lifecycle)", () => {
         let createdTaskId: number | undefined;
 
-        it("getPullRequestTasks should list existing blocker-comments", async() => {
+        it("getPullRequestTasks should list existing tasks", async() => {
             const res = await callTool("getPullRequestTasks", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
@@ -629,46 +587,44 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             expect(tasks.length).toBeGreaterThanOrEqual(1);
         });
 
-        it("createPullRequestTask should create a blocker-comment", async() => {
+        it("createPullRequestTask should create a task", async() => {
             const res = await callTool("createPullRequestTask", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
-                content: "DC integration test task"
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
+                content: "Cloud integration test task"
             });
 
             expect(res.status).toBe("COMPLETED");
             expect(res.message).toContain("created");
 
-            const task = res.result as { id: number; text: string; severity: string };
+            const task = res.result as { id: number };
 
             expect(task.id).toBeDefined();
-            expect(task.severity).toBe("BLOCKER");
             createdTaskId = task.id;
         });
 
-        it("getPullRequestTask should get the created blocker-comment", async() => {
+        it("getPullRequestTask should get the created task", async() => {
             if (!createdTaskId) return;
 
             const res = await callTool("getPullRequestTask", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 taskId: createdTaskId
             });
 
             expect(res.status).toBe("COMPLETED");
 
-            const task = res.result as { id: number; text: string };
+            const task = res.result as { id: number };
 
             expect(task.id).toBe(createdTaskId);
-            expect(task.text).toBe("DC integration test task");
         });
 
-        it("updatePullRequestTask should resolve a blocker-comment", async() => {
+        it("updatePullRequestTask should resolve the task", async() => {
             if (!createdTaskId) return;
 
             const res = await callTool("updatePullRequestTask", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 taskId: createdTaskId,
                 state: "RESOLVED"
             });
@@ -677,12 +633,12 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
             expect(res.message).toContain("updated");
         });
 
-        it("deletePullRequestTask should delete the blocker-comment", async() => {
+        it("deletePullRequestTask should delete the task", async() => {
             if (!createdTaskId) return;
 
             const res = await callTool("deletePullRequestTask", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID,
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID,
                 taskId: createdTaskId
             });
 
@@ -694,28 +650,19 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
     // ── PR Statuses ──────────────────────────────────────────────────
 
     describe("getPullRequestStatuses", () => {
-        it("should return empty list on DC (no direct equivalent)", async() => {
+        it("should return build statuses", async() => {
             const res = await callTool("getPullRequestStatuses", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
-            });
-
-            // DC may return empty or fail gracefully
-            expect(["COMPLETED", "FAILED"].includes(res.status)).toBe(true);
-        });
-    });
-
-    // ── Comments via getPullRequestComments ───────────────────────────
-
-    describe("getPullRequestComments", () => {
-        it("should return comments list", async() => {
-            const res = await callTool("getPullRequestComments", {
-                repoSlug: DC_REPO,
-                pullRequestId: DC_PR_ID
+                repoSlug: CLOUD_REPO,
+                pullRequestId: CLOUD_PR_ID
             });
 
             expect(res.status).toBe("COMPLETED");
-            expect(Array.isArray(res.result)).toBe(true);
+
+            const statuses = res.result as Array<Record<string, unknown>>;
+
+            expect(Array.isArray(statuses)).toBe(true);
+            expect(statuses.length).toBeGreaterThan(0);
+            expect(statuses[0]).toHaveProperty("state");
         });
     });
 });

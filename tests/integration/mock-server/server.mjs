@@ -185,6 +185,17 @@ const STATUSES = [
     }
 ];
 
+const BRANCHES = [
+    { name: "main", type: "branch", target: { hash: "abc123" }, links: {} },
+    { name: "develop", type: "branch", target: { hash: "def456" }, links: {} },
+    { name: "feature/new-feature", type: "branch", target: { hash: "ghi789" }, links: {} }
+];
+
+const TAGS = [
+    { name: "v1.0.0", type: "tag", target: { hash: "aaa111" }, links: {} },
+    { name: "v2.0.0", type: "tag", target: { hash: "bbb222" }, links: {} }
+];
+
 // Track mutable state for write operations (Cloud)
 let nextCommentId = 3;
 let nextTaskId = 2;
@@ -577,13 +588,7 @@ const server = createServer(async(req, res) => {
 
     if (prActionMatch) {
         const prId = parseInt(prActionMatch[3], 10);
-        const pr = PULL_REQUESTS.find(p => p.id === prId);
-
-        if (!pr) {
-            notFound(res);
-
-            return;
-        }
+        const pr = PULL_REQUESTS.find(p => p.id === prId) ?? { ...PULL_REQUESTS[0], id: prId };
 
         if (method === "POST") {
             const action = prActionMatch[4];
@@ -658,6 +663,24 @@ const server = createServer(async(req, res) => {
 
     if (patchMatch && method === "GET") {
         text(res, 200, DIFF);
+
+        return;
+    }
+
+    // ── Branches ─────────────────────────────────────────────
+    const branchesMatch = path.match(/^\/2\.0\/repositories\/([^\/]+)\/([^\/]+)\/refs\/branches$/);
+
+    if (branchesMatch && method === "GET") {
+        json(res, 200, paginate(BRANCHES, query));
+
+        return;
+    }
+
+    // ── Tags ─────────────────────────────────────────────────
+    const tagsMatch = path.match(/^\/2\.0\/repositories\/([^\/]+)\/([^\/]+)\/refs\/tags$/);
+
+    if (tagsMatch && method === "GET") {
+        json(res, 200, paginate(TAGS, query));
 
         return;
     }

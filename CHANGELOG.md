@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-13
+
 ### Added
 
 - **Bitbucket Data Center support**: full API compatibility with Bitbucket Server/Data Center
@@ -22,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Ref tools**: `listBranches` and `listTags` with platform-aware filtering (`q=` for Cloud, `filterText=` for DC)
 - **Structured content**: `toMcpResult()` now returns `structuredContent` alongside text blocks, satisfying MCP SDK output schema validation
 - **Compatibility matrix** in README: Bitbucket DC v8.x, v9.x, and v10.x explicitly documented as supported
+- **Full integration test suite** (89 tests): Docker-based mock server covers both Cloud and DC code paths
+  - Cloud tool-level tests (`cloud.test.ts`): all 34 tools tested via `callTool()` including create/decline/merge lifecycle
+  - DC tool-level tests (`datacenter.test.ts`): all 34 tools tested with DC-specific response shapes and blocker-comments CRUD
+  - Mock server extended with DC endpoints (`/rest/api/latest/...`), DC pagination, branches, tags, blocker-comments, approve/decline/merge
+  - Cloud mock extended with branch/tag endpoints (`/refs/branches`, `/refs/tags`)
 
 ### Changed
 
@@ -31,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getWorkspace` on DC maps to `/projects/{key}` instead of `/workspaces/{slug}`
 - Repository filtering uses `name=` parameter on DC instead of Cloud's `q=name ~` syntax
 - Error messages updated from "Workspace" to "Workspace/project" for DC clarity
+- `detectPlatform()` now recognises URLs containing `/2.0` as Cloud (e.g. `localhost:7990/2.0`)
 
 ## [0.2.0] - 2026-02-13
 
