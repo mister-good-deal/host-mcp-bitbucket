@@ -175,12 +175,24 @@ export interface BitbucketStatus {
 
 // ── Paginated response ──────────────────────────────────────────────────
 
+/** Cloud-style paginated response. */
 export interface BitbucketPaginatedResponse<T> {
     pagelen: number;
     size?: number;
     page?: number;
     next?: string;
     previous?: string;
+    values: T[];
+}
+
+/** Data Center-style paginated response. */
+export interface BitbucketDCPaginatedResponse<T> {
+    size: number;
+    limit: number;
+    isLastPage: boolean;
+    start: number;
+    nextPageStart?: number;
+    filter?: string | null;
     values: T[];
 }
 

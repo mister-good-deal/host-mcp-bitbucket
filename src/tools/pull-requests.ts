@@ -5,6 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { BitbucketClient } from "../bitbucket/client.js";
 import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketPullRequest } from "../bitbucket/types.js";
+import type { PathBuilder } from "../bitbucket/utils.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
 import {
@@ -18,7 +19,7 @@ import {
 const PullRequestStateEnum = z.enum(["OPEN", "MERGED", "DECLINED", "SUPERSEDED"]);
 const MergeStrategyEnum = z.enum(["merge_commit", "squash", "fast_forward"]);
 
-export function registerPullRequestTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
+export function registerPullRequestTools(server: McpServer, client: BitbucketClient, paths: PathBuilder, defaultWorkspace?: string): void {
     const logger = getLogger();
 
     function resolveWorkspace(workspace?: string) {
@@ -54,7 +55,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 if (state) extraQuery.state = state;
 
                 const result = await client.getPaginated<BitbucketPullRequest>(
-                    `/repositories/${ws}/${repoSlug}/pullrequests`,
+                    paths.pullRequests(ws, repoSlug),
                     { pagelen, page, all },
                     extraQuery
                 );
@@ -97,22 +98,36 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
             logger.debug(`createPullRequest: ${ws}/${repoSlug}, ${sourceBranch} → ${targetBranch}`);
 
             try {
-                const body: Record<string, unknown> = {
-                    title,
-                    source: { branch: { name: sourceBranch }},
-                    destination: { branch: { name: targetBranch }}
-                };
+                let body: Record<string, unknown>;
 
-                if (description !== undefined) body.description = description;
+                if (paths.isCloud) {
+                    body = {
+                        title,
+                        source: { branch: { name: sourceBranch }},
+                        destination: { branch: { name: targetBranch }}
+                    };
 
-                if (reviewers && reviewers.length > 0) body.reviewers = reviewers.map(uuid => ({ uuid }));
+                    if (description !== undefined) body.description = description;
 
-                if (draft !== undefined) body.draft = draft;
+                    if (reviewers && reviewers.length > 0) body.reviewers = reviewers.map(uuid => ({ uuid }));
 
-                if (closeSourceBranch !== undefined) body.close_source_branch = closeSourceBranch;
+                    if (draft !== undefined) body.draft = draft;
+
+                    if (closeSourceBranch !== undefined) body.close_source_branch = closeSourceBranch;
+                } else {
+                    body = {
+                        title,
+                        fromRef: { id: `refs/heads/${sourceBranch}` },
+                        toRef: { id: `refs/heads/${targetBranch}` }
+                    };
+
+                    if (description !== undefined) body.description = description;
+
+                    if (reviewers && reviewers.length > 0) body.reviewers = reviewers.map(name => ({ user: { name }}));
+                }
 
                 const pr = await client.post<BitbucketPullRequest>(
-                    `/repositories/${ws}/${repoSlug}/pullrequests`,
+                    paths.pullRequests(ws, repoSlug),
                     body
                 );
 
@@ -145,7 +160,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 const pr = await client.get<BitbucketPullRequest>(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}`
+                    paths.pullRequest(ws, repoSlug, pullRequestId)
                 );
 
                 return toMcpResult(toolSuccess(pr));
@@ -189,7 +204,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 if (description !== undefined) body.description = description;
 
                 const pr = await client.put<BitbucketPullRequest>(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}`,
+                    paths.pullRequest(ws, repoSlug, pullRequestId),
                     body
                 );
 
@@ -229,7 +244,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 const result = await client.getPaginated(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/activity`,
+                    paths.pullRequestActivity(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
                 );
 
@@ -266,7 +281,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 const result = await client.post(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/approve`
+                    paths.pullRequestApprove(ws, repoSlug, pullRequestId)
                 );
 
                 return toMcpResult(toolSuccess(result, "Pull request approved."));
@@ -302,7 +317,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 await client.delete(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/approve`
+                    paths.pullRequestApprove(ws, repoSlug, pullRequestId)
                 );
 
                 return toMcpResult(toolSuccess(true, "Approval removed."));
@@ -338,7 +353,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 const result = await client.post(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/request-changes`
+                    paths.pullRequestRequestChanges(ws, repoSlug, pullRequestId)
                 );
 
                 return toMcpResult(toolSuccess(result, "Changes requested."));
@@ -374,7 +389,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 await client.delete(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/request-changes`
+                    paths.pullRequestRequestChanges(ws, repoSlug, pullRequestId)
                 );
 
                 return toMcpResult(toolSuccess(true, "Change request removed."));
@@ -415,7 +430,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 if (message) body.message = message;
 
                 const result = await client.post<BitbucketPullRequest>(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/decline`,
+                    paths.pullRequestDecline(ws, repoSlug, pullRequestId),
                     Object.keys(body).length > 0 ? body : undefined
                 );
 
@@ -463,7 +478,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 if (closeSourceBranch !== undefined) body.close_source_branch = closeSourceBranch;
 
                 const result = await client.post<BitbucketPullRequest>(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/merge`,
+                    paths.pullRequestMerge(ws, repoSlug, pullRequestId),
                     Object.keys(body).length > 0 ? body : undefined
                 );
 
@@ -503,7 +518,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 const result = await client.getPaginated(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/commits`,
+                    paths.pullRequestCommits(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
                 );
 
@@ -543,7 +558,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
             try {
                 const result = await client.getPaginated(
-                    `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/statuses`,
+                    paths.pullRequestStatuses(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
                 );
 

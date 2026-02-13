@@ -2,21 +2,33 @@ import { jest } from "@jest/globals";
 
 import type { BitbucketClient } from "../../../src/bitbucket/client.js";
 import { BitbucketClientError } from "../../../src/bitbucket/client.js";
+import { PathBuilder } from "../../../src/bitbucket/utils.js";
 
 // Logger is now silenced globally in tests/unit/setup.ts
 
 /**
  * Create a mock BitbucketClient for testing tools.
+ * Defaults to "cloud" platform.
  */
-export function createMockClient(): jest.Mocked<BitbucketClient> {
+export function createMockClient(platform: "cloud" | "datacenter" = "cloud"): jest.Mocked<BitbucketClient> {
     return {
         get: jest.fn(),
         getText: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
         delete: jest.fn(),
-        getPaginated: jest.fn()
+        getPaginated: jest.fn(),
+        platform,
+        isCloud: platform === "cloud",
+        isDataCenter: platform === "datacenter"
     } as unknown as jest.Mocked<BitbucketClient>;
+}
+
+/**
+ * Create a PathBuilder for testing, defaulting to Cloud.
+ */
+export function createPaths(platform: "cloud" | "datacenter" = "cloud"): PathBuilder {
+    return new PathBuilder(platform);
 }
 
 /**

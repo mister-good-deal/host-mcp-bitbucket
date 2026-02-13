@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Bitbucket Data Center support**: full API compatibility with Bitbucket Server/Data Center
+  - Platform auto-detection from URL (`detectPlatform()`)
+  - `PathBuilder` class for platform-specific API paths (Cloud vs DC)
+  - Dual pagination: Cloud (`page`/`pagelen`/`next`) and DC (`start`/`limit`/`isLastPage`/`nextPageStart`)
+  - DC-aware request bodies for pull requests (`fromRef`/`toRef`), comments (`text` + `anchor`), and comment updates
+  - Self-hosted URLs automatically get `/rest/api/latest` appended
+- **Ref tools**: `listBranches` and `listTags` with platform-aware filtering (`q=` for Cloud, `filterText=` for DC)
+- **Structured content**: `toMcpResult()` now returns `structuredContent` alongside text blocks, satisfying MCP SDK output schema validation
+
+### Changed
+
+- All tool registration functions now accept a `PathBuilder` parameter for platform-aware routing
+- Output schemas simplified to use `z.any()` for the `result` field — supports both Cloud and DC response shapes
+- `getCurrentUser` on DC uses `/application-properties` endpoint (no `/user` equivalent on DC)
+- `getWorkspace` on DC maps to `/projects/{key}` instead of `/workspaces/{slug}`
+- Repository filtering uses `name=` parameter on DC instead of Cloud's `q=name ~` syntax
+- Error messages updated from "Workspace" to "Workspace/project" for DC clarity
+
 ## [0.2.0] - 2026-02-13
 
 ### Added

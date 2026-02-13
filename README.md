@@ -6,12 +6,14 @@ Works with both **Bitbucket Cloud** and **Bitbucket Server/Data Center** instanc
 
 ## Features
 
+- **Dual platform** — full support for both Bitbucket Cloud and Bitbucket Server/Data Center APIs
 - **Repository operations** — list and get repository details
 - **Pull request management** — create, update, approve, merge, decline, request changes
 - **PR comments** — add, update, delete, resolve/reopen comments (including inline comments)
 - **PR diffs** — get raw diffs, diff statistics, and patches
 - **PR tasks** — create, update, delete tasks on pull requests
-- **Pagination** — automatic pagination with `all` mode (capped at 1000 items)
+- **Branch & tag listing** — list branches and tags with optional filtering
+- **Pagination** — automatic pagination with `all` mode (capped at 1000 items); Cloud and DC pagination styles handled transparently
 - **Dual transport** — stdio (default) and Streamable HTTP
 - **Retry with backoff** — automatic retry on transient errors (429, 5xx)
 
@@ -70,13 +72,16 @@ export BITBUCKET_URL="https://api.bitbucket.org/2.0"  # optional, default for Cl
 
 ### Bitbucket Server / Data Center
 
-For self-hosted instances, point `--bitbucket-url` to your server's REST API endpoint:
+For self-hosted instances, point `--bitbucket-url` to your server URL (the REST API path is auto-appended):
 
 ```bash
 npx @mister-good-deal/host-mcp-bitbucket \
-    --bitbucket-url "https://bitbucket.mycompany.com/rest/api/1.0" \
-    --bitbucket-token "<YOUR_TOKEN>"
+    --bitbucket-url "https://bitbucket.mycompany.com" \
+    --bitbucket-token "<YOUR_HTTP_ACCESS_TOKEN>" \
+    --default-workspace "<PROJECT_KEY>"
 ```
+
+The server auto-detects the platform (Cloud vs Data Center) from the URL and uses the correct API paths, pagination style, and request bodies. For DC, the `--default-workspace` value maps to a **project key**.
 
 ## Available Tools
 
@@ -87,6 +92,13 @@ Unless noted otherwise, listing tools accept the following optional parameters:
 - `pagelen` — Number of items per page (default: 10, max: 100)
 - `page` — 1-based page number
 - `all` — When `true`, fetches all pages automatically (capped at 1000 items)
+
+### Workspace / Connectivity
+
+| Tool | Description |
+|------|-------------|
+| `getCurrentUser` | Get the authenticated user (Cloud) or verify connectivity (DC) |
+| `getWorkspace` | Get workspace (Cloud) or project (DC) details |
 
 ### Repository Operations
 
@@ -142,6 +154,13 @@ Unless noted otherwise, listing tools accept the following optional parameters:
 | `getPullRequestTask` | Get a specific task |
 | `updatePullRequestTask` | Update a task (content, state) |
 | `deletePullRequestTask` | Delete a task |
+
+### Branch & Tag Operations
+
+| Tool | Description |
+|------|-------------|
+| `listBranches` | List branches in a repository (with optional name filter) |
+| `listTags` | List tags in a repository (with optional name filter) |
 
 ## Development
 

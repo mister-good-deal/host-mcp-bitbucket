@@ -5,6 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { BitbucketClient } from "../bitbucket/client.js";
 import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketTask, TaskState } from "../bitbucket/types.js";
+import type { PathBuilder } from "../bitbucket/utils.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
 import {
@@ -14,15 +15,11 @@ import {
 
 const TaskStateEnum = z.enum(["OPEN", "RESOLVED"]);
 
-export function registerTaskTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
+export function registerTaskTools(server: McpServer, client: BitbucketClient, paths: PathBuilder, defaultWorkspace?: string): void {
     const logger = getLogger();
 
     function resolveWorkspace(workspace?: string) {
         return workspace ?? defaultWorkspace;
-    }
-
-    function prTasksPath(ws: string, repoSlug: string, pullRequestId: number) {
-        return `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/tasks`;
     }
 
     // ── getPullRequestTasks ──────────────────────────────────────────────
@@ -50,7 +47,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
 
             try {
                 const result = await client.getPaginated<BitbucketTask>(
-                    prTasksPath(ws, repoSlug, pullRequestId),
+                    paths.pullRequestTasks(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
                 );
 
@@ -98,7 +95,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 if (state) body.state = state;
 
                 const task = await client.post<BitbucketTask>(
-                    prTasksPath(ws, repoSlug, pullRequestId),
+                    paths.pullRequestTasks(ws, repoSlug, pullRequestId),
                     body
                 );
 
@@ -136,7 +133,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
 
             try {
                 const task = await client.get<BitbucketTask>(
-                    `${prTasksPath(ws, repoSlug, pullRequestId)}/${taskId}`
+                    paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId)
                 );
 
                 return toMcpResult(toolSuccess(task));
@@ -181,7 +178,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 if (state !== undefined) body.state = state as TaskState;
 
                 const task = await client.put<BitbucketTask>(
-                    `${prTasksPath(ws, repoSlug, pullRequestId)}/${taskId}`,
+                    paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId),
                     body
                 );
 
@@ -219,7 +216,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
 
             try {
                 await client.delete(
-                    `${prTasksPath(ws, repoSlug, pullRequestId)}/${taskId}`
+                    paths.pullRequestTask(ws, repoSlug, pullRequestId, taskId)
                 );
 
                 return toMcpResult(toolSuccess(true, "Task deleted."));

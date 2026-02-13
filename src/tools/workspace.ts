@@ -5,11 +5,12 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { BitbucketClient } from "../bitbucket/client.js";
 import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketAccount, BitbucketWorkspace } from "../bitbucket/types.js";
+import type { PathBuilder } from "../bitbucket/utils.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
 import { getCurrentUserOutput, getWorkspaceOutput } from "./output-schemas.js";
 
-export function registerWorkspaceTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
+export function registerWorkspaceTools(server: McpServer, client: BitbucketClient, paths: PathBuilder, defaultWorkspace?: string): void {
     const logger = getLogger();
 
     // ── getCurrentUser ───────────────────────────────────────────────────
@@ -25,9 +26,21 @@ export function registerWorkspaceTools(server: McpServer, client: BitbucketClien
             logger.debug("getCurrentUser");
 
             try {
-                const user = await client.get<BitbucketAccount>("/user");
+                if (paths.isCloud) {
+                    const user = await client.get<BitbucketAccount>("/user");
 
-                return toMcpResult(toolSuccess(user, "Authenticated successfully."));
+                    return toMcpResult(toolSuccess(user, "Authenticated successfully."));
+                }
+
+                // DC: no direct /user endpoint — use /application-properties to verify connectivity
+                const props = await client.get<Record<string, unknown>>("/application-properties");
+
+                // Return server properties as a proxy for auth verification
+                return toMcpResult(toolSuccess({
+                    display_name: "Authenticated User",
+                    type: "user" as const,
+                    ...props
+                }, "Authenticated successfully (Data Center)."));
             } catch (error) {
                 return toMcpResult(toolError(error));
             }
@@ -38,9 +51,9 @@ export function registerWorkspaceTools(server: McpServer, client: BitbucketClien
     server.registerTool(
         "getWorkspace",
         {
-            description: "Get details about a Bitbucket workspace",
+            description: "Get details about a Bitbucket workspace (Cloud) or project (Data Center)",
             inputSchema: {
-                workspace: z.string().optional().describe("Bitbucket workspace slug (uses default workspace if omitted)")
+                workspace: z.string().optional().describe("Bitbucket workspace slug or project key (uses default if omitted)")
             },
             outputSchema: getWorkspaceOutput,
             annotations: { readOnlyHint: true }
@@ -49,18 +62,18 @@ export function registerWorkspaceTools(server: McpServer, client: BitbucketClien
             const ws = workspace ?? defaultWorkspace;
 
             if (!ws) {
-                return toMcpResult(toolError(new Error("Workspace is required. Provide it as a parameter or set BITBUCKET_WORKSPACE.")));
+                return toMcpResult(toolError(new Error("Workspace/project is required. Provide it as a parameter or set BITBUCKET_WORKSPACE.")));
             }
 
             logger.debug(`getWorkspace: ${ws}`);
 
             try {
-                const result = await client.get<BitbucketWorkspace>(`/workspaces/${ws}`);
+                const result = await client.get<BitbucketWorkspace>(paths.workspace(ws));
 
                 return toMcpResult(toolSuccess(result));
             } catch (error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
-                    return toMcpResult(toolNotFound("Workspace", ws));
+                    return toMcpResult(toolNotFound("Workspace/Project", ws));
                 }
 
                 return toMcpResult(toolError(error));

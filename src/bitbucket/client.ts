@@ -1,11 +1,12 @@
-import type { BitbucketPaginatedResponse } from "./types.js";
-import { buildQueryString } from "./utils.js";
+import type { BitbucketDCPaginatedResponse, BitbucketPaginatedResponse } from "./types.js";
+import { buildQueryString, type BitbucketPlatform } from "./utils.js";
 import { getLogger } from "../logger.js";
 
 export interface BitbucketClientConfig {
     baseUrl: string;
     token: string;
     timeout: number;
+    platform: BitbucketPlatform;
 
     /** Maximum number of retries for transient errors (default: 3). */
     maxRetries?: number;
@@ -49,6 +50,7 @@ export class BitbucketClient {
     private readonly timeout: number;
     private readonly maxRetries: number;
     private readonly retryDelay: number;
+    readonly platform: BitbucketPlatform;
 
     constructor(config: BitbucketClientConfig) {
         this.baseUrl = config.baseUrl.replace(/\/+$/, "");
@@ -56,6 +58,15 @@ export class BitbucketClient {
         this.timeout = config.timeout;
         this.maxRetries = config.maxRetries ?? 3;
         this.retryDelay = config.retryDelay ?? 1000;
+        this.platform = config.platform;
+    }
+
+    get isCloud(): boolean {
+        return this.platform === "cloud";
+    }
+
+    get isDataCenter(): boolean {
+        return this.platform === "datacenter";
     }
 
     /**
@@ -178,11 +189,24 @@ export class BitbucketClient {
 
     /**
      * Fetch a paginated Bitbucket endpoint.
-     * When `all` is true, follows `next` links until all items are collected (capped at 1000).
+     * Supports both Cloud (page/pagelen/next) and DC (start/limit/isLastPage) pagination.
+     * When `all` is true, follows pages until all items are collected (capped at 1000).
      */
     async getPaginated<T>(
         path: string,
         options: PaginationOptions = {},
+        extraQuery?: Record<string, string | number | boolean | undefined | null>
+    ): Promise<{ values: T[]; total?: number }> {
+        if (this.isDataCenter) {
+            return this.getPaginatedDC<T>(path, options, extraQuery);
+        }
+
+        return this.getPaginatedCloud<T>(path, options, extraQuery);
+    }
+
+    private async getPaginatedCloud<T>(
+        path: string,
+        options: PaginationOptions,
         extraQuery?: Record<string, string | number | boolean | undefined | null>
     ): Promise<{ values: T[]; total?: number }> {
         const pagelen = Math.min(options.pagelen ?? DEFAULT_PAGE_LEN, MAX_PAGE_LEN);
@@ -218,6 +242,47 @@ export class BitbucketClient {
         }
 
         return { values: allValues, total: firstPage.size };
+    }
+
+    private async getPaginatedDC<T>(
+        path: string,
+        options: PaginationOptions,
+        extraQuery?: Record<string, string | number | boolean | undefined | null>
+    ): Promise<{ values: T[]; total?: number }> {
+        const limit = Math.min(options.pagelen ?? 25, MAX_PAGE_LEN);
+        const query: Record<string, string | number | boolean | undefined | null> = {
+            ...extraQuery,
+            limit
+        };
+
+        // DC uses 0-based `start` index; convert 1-based `page` to `start`
+        if (options.page !== undefined) query.start = (options.page - 1) * limit;
+
+        const shouldFetchAll = options.all === true && options.page === undefined;
+
+        if (!shouldFetchAll) {
+            const response = await this.get<BitbucketDCPaginatedResponse<T>>(path, query);
+
+            return { values: response.values, total: response.size };
+        }
+
+        // Fetch all pages
+        const allValues: T[] = [];
+        let start = 0;
+
+        while (allValues.length < ALL_ITEMS_CAP) {
+            query.start = start;
+
+            const response = await this.get<BitbucketDCPaginatedResponse<T>>(path, query);
+
+            allValues.push(...response.values);
+
+            if (response.isLastPage || response.nextPageStart === undefined) break;
+
+            start = response.nextPageStart;
+        }
+
+        return { values: allValues, total: allValues.length };
     }
 
     private async request<T>(method: string, url: string): Promise<T> {

@@ -1,6 +1,28 @@
 import { describe, it, expect } from "@jest/globals";
 
-import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString } from "../../../src/bitbucket/utils.js";
+import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString, detectPlatform } from "../../../src/bitbucket/utils.js";
+
+describe("detectPlatform", () => {
+    it("should detect bitbucket.org as cloud", () => {
+        expect(detectPlatform("https://bitbucket.org/myworkspace")).toBe("cloud");
+    });
+
+    it("should detect www.bitbucket.org as cloud", () => {
+        expect(detectPlatform("https://www.bitbucket.org/myworkspace")).toBe("cloud");
+    });
+
+    it("should detect api.bitbucket.org as cloud", () => {
+        expect(detectPlatform("https://api.bitbucket.org/2.0")).toBe("cloud");
+    });
+
+    it("should detect self-hosted URL as datacenter", () => {
+        expect(detectPlatform("https://bitbucket.mycompany.com")).toBe("datacenter");
+    });
+
+    it("should detect self-hosted URL with REST path as datacenter", () => {
+        expect(detectPlatform("https://bitbucket.mycompany.com/rest/api/latest")).toBe("datacenter");
+    });
+});
 
 describe("normalizeBaseUrl", () => {
     it("should convert bitbucket.org web URL to API URL", () => {
@@ -23,12 +45,12 @@ describe("normalizeBaseUrl", () => {
         expect(normalizeBaseUrl("https://bitbucket.mycompany.com/rest/api/1.0/")).toBe("https://bitbucket.mycompany.com/rest/api/1.0");
     });
 
-    it("should strip multiple trailing slashes", () => {
-        expect(normalizeBaseUrl("https://bitbucket.mycompany.com///")).toBe("https://bitbucket.mycompany.com");
+    it("should strip multiple trailing slashes and add REST path", () => {
+        expect(normalizeBaseUrl("https://bitbucket.mycompany.com///")).toBe("https://bitbucket.mycompany.com/rest/api/latest");
     });
 
-    it("should leave self-hosted URLs as-is (minus trailing slashes)", () => {
-        expect(normalizeBaseUrl("https://bitbucket.mycompany.com")).toBe("https://bitbucket.mycompany.com");
+    it("should add REST API path to bare self-hosted URL", () => {
+        expect(normalizeBaseUrl("https://bitbucket.mycompany.com")).toBe("https://bitbucket.mycompany.com/rest/api/latest");
     });
 
     it("should handle bare bitbucket.org without path", () => {
