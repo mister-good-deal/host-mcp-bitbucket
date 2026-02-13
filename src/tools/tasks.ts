@@ -7,6 +7,10 @@ import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketTask, TaskState } from "../bitbucket/types.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
+import {
+    getPullRequestTasksOutput, createPullRequestTaskOutput, getPullRequestTaskOutput,
+    updatePullRequestTaskOutput, deletePullRequestTaskOutput
+} from "./output-schemas.js";
 
 const TaskStateEnum = z.enum(["OPEN", "RESOLVED"]);
 
@@ -34,6 +38,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 page: z.number().int().min(1).optional().describe("Page number"),
                 all: z.boolean().optional().describe("Fetch all pages")
             },
+            outputSchema: getPullRequestTasksOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, pagelen, page, all }) => {
@@ -73,6 +78,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 commentId: z.number().int().optional().describe("Comment ID to attach the task to"),
                 state: TaskStateEnum.optional().describe("Initial task state (OPEN or RESOLVED)")
             },
+            outputSchema: createPullRequestTaskOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, content, commentId, state }) => {
@@ -118,6 +124,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 taskId: z.number().int().describe("Task ID")
             },
+            outputSchema: getPullRequestTaskOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, taskId }) => {
@@ -156,6 +163,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 content: z.string().optional().describe("Updated task content"),
                 state: TaskStateEnum.optional().describe("Updated task state (OPEN or RESOLVED)")
             },
+            outputSchema: updatePullRequestTaskOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, taskId, content, state }) => {
@@ -199,6 +207,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, de
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 taskId: z.number().int().describe("Task ID")
             },
+            outputSchema: deletePullRequestTaskOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, taskId }) => {

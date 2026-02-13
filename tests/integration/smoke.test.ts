@@ -2,11 +2,9 @@ import { describe, it, expect, beforeAll } from "@jest/globals";
 
 import type { BitbucketAccount, BitbucketRepository } from "../../src/bitbucket/types.js";
 
-import { createIntegrationClient, waitForBitbucket, TEST_WORKSPACE, canRunIntegration } from "./setup.js";
+import { createIntegrationClient, waitForBitbucket, TEST_WORKSPACE } from "./setup.js";
 
-const describeIntegration = canRunIntegration ? describe : describe.skip;
-
-describeIntegration("Integration: Smoke Tests", () => {
+describe("Integration: Smoke Tests", () => {
     const client = createIntegrationClient();
 
     beforeAll(async() => {
@@ -18,11 +16,10 @@ describeIntegration("Integration: Smoke Tests", () => {
 
         expect(user).toBeDefined();
         expect(user.display_name).toBeTruthy();
+        expect(user.nickname).toBe("admin");
     });
 
     it("should list repositories in the workspace", async() => {
-        if (!TEST_WORKSPACE) return;
-
         const result = await client.getPaginated<BitbucketRepository>(
             `/repositories/${TEST_WORKSPACE}`,
             { pagelen: 5 }
@@ -31,44 +28,56 @@ describeIntegration("Integration: Smoke Tests", () => {
         expect(result).toBeDefined();
         expect(result.values).toBeDefined();
         expect(Array.isArray(result.values)).toBe(true);
+        expect(result.values.length).toBe(2);
+        expect(result.values[0].slug).toBe("test-repo");
+    });
+
+    it("should get a single repository", async() => {
+        const repo = await client.get<BitbucketRepository>(
+            `/repositories/${TEST_WORKSPACE}/test-repo`
+        );
+
+        expect(repo).toBeDefined();
+        expect(repo.slug).toBe("test-repo");
+        expect(repo.full_name).toBe("test-workspace/test-repo");
     });
 
     it("should handle 404 for non-existent repository", async() => {
-        if (!TEST_WORKSPACE) return;
-
         await expect(
             client.get(`/repositories/${TEST_WORKSPACE}/this-repo-does-not-exist-12345`)
-        ).rejects.toThrow(/not found/i);
+        ).rejects.toThrow();
     });
 
     it("should handle 404 for non-existent workspace", async() => {
         await expect(
             client.get("/repositories/this-workspace-does-not-exist-xyz-12345")
-        ).rejects.toThrow(/not found|404/i);
+        ).rejects.toThrow();
     });
 
     it("should paginate repositories correctly", async() => {
-        if (!TEST_WORKSPACE) return;
-
         const page1 = await client.getPaginated<BitbucketRepository>(
             `/repositories/${TEST_WORKSPACE}`,
             { pagelen: 1, page: 1 }
         );
 
-        expect(page1.values.length).toBeLessThanOrEqual(1);
+        expect(page1.values.length).toBe(1);
 
-        if (page1.total && page1.total > 1) {
-            const page2 = await client.getPaginated<BitbucketRepository>(
-                `/repositories/${TEST_WORKSPACE}`,
-                { pagelen: 1, page: 2 }
-            );
+        const page2 = await client.getPaginated<BitbucketRepository>(
+            `/repositories/${TEST_WORKSPACE}`,
+            { pagelen: 1, page: 2 }
+        );
 
-            expect(page2.values.length).toBeLessThanOrEqual(1);
+        expect(page2.values.length).toBe(1);
+        expect(page1.values[0].uuid).not.toBe(page2.values[0].uuid);
+    });
 
-            // Pages should return different repos (if multiple exist)
-            if (page1.values.length > 0 && page2.values.length > 0) {
-                expect(page1.values[0].uuid).not.toBe(page2.values[0].uuid);
-            }
-        }
+    it("should reject unauthenticated requests", async() => {
+        const badClient = new (await import("../../src/bitbucket/client.js")).BitbucketClient({
+            baseUrl: process.env.BITBUCKET_URL ?? "http://localhost:7990/2.0",
+            token: "bad-token",
+            timeout: 5_000
+        });
+
+        await expect(badClient.get("/user")).rejects.toThrow();
     });
 });

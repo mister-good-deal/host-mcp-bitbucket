@@ -7,6 +7,7 @@ import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketRepository } from "../bitbucket/types.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
+import { listRepositoriesOutput, getRepositoryOutput } from "./output-schemas.js";
 
 export function registerRepositoryTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
     const logger = getLogger();
@@ -23,6 +24,7 @@ export function registerRepositoryTools(server: McpServer, client: BitbucketClie
                 page: z.number().int().min(1).optional().describe("Page number (1-based)"),
                 all: z.boolean().optional().describe("When true, fetches all pages (capped at 1000 items)")
             },
+            outputSchema: listRepositoriesOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, name, pagelen, page, all }) => {
@@ -63,6 +65,7 @@ export function registerRepositoryTools(server: McpServer, client: BitbucketClie
                 workspace: z.string().optional().describe("Bitbucket workspace name (uses default workspace if omitted)"),
                 repoSlug: z.string().describe("Repository slug")
             },
+            outputSchema: getRepositoryOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug }) => {

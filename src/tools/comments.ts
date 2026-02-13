@@ -7,6 +7,10 @@ import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketComment } from "../bitbucket/types.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
+import {
+    getPullRequestCommentsOutput, getPullRequestCommentOutput, addPullRequestCommentOutput,
+    updatePullRequestCommentOutput, deletePullRequestCommentOutput, resolveCommentOutput, reopenCommentOutput
+} from "./output-schemas.js";
 
 export function registerCommentTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
     const logger = getLogger();
@@ -32,6 +36,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 page: z.number().int().min(1).optional().describe("Page number"),
                 all: z.boolean().optional().describe("Fetch all pages")
             },
+            outputSchema: getPullRequestCommentsOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, pagelen, page, all }) => {
@@ -69,6 +74,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 commentId: z.number().int().describe("Comment ID")
             },
+            outputSchema: getPullRequestCommentOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, commentId }) => {
@@ -111,6 +117,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 }).optional().describe("Inline comment position for commenting on specific lines"),
                 parentId: z.number().int().optional().describe("Parent comment ID for threaded replies")
             },
+            outputSchema: addPullRequestCommentOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, content, inline, parentId }) => {
@@ -157,6 +164,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 commentId: z.number().int().describe("Comment ID"),
                 content: z.string().describe("Updated comment content in markdown format")
             },
+            outputSchema: updatePullRequestCommentOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, commentId, content }) => {
@@ -194,6 +202,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 commentId: z.number().int().describe("Comment ID")
             },
+            outputSchema: deletePullRequestCommentOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, commentId }) => {
@@ -230,6 +239,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 commentId: z.number().int().describe("Comment ID")
             },
+            outputSchema: resolveCommentOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, commentId }) => {
@@ -266,6 +276,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 commentId: z.number().int().describe("Comment ID")
             },
+            outputSchema: reopenCommentOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, commentId }) => {

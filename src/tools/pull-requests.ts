@@ -7,6 +7,13 @@ import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketPullRequest } from "../bitbucket/types.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
+import {
+    getPullRequestsOutput, createPullRequestOutput, getPullRequestOutput,
+    updatePullRequestOutput, getPullRequestActivityOutput, approvePullRequestOutput,
+    unapprovePullRequestOutput, requestChangesOutput, removeChangeRequestOutput,
+    declinePullRequestOutput, mergePullRequestOutput, getPullRequestCommitsOutput,
+    getPullRequestStatusesOutput
+} from "./output-schemas.js";
 
 const PullRequestStateEnum = z.enum(["OPEN", "MERGED", "DECLINED", "SUPERSEDED"]);
 const MergeStrategyEnum = z.enum(["merge_commit", "squash", "fast_forward"]);
@@ -31,6 +38,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 page: z.number().int().min(1).optional().describe("Page number (1-based)"),
                 all: z.boolean().optional().describe("Fetch all pages (capped at 1000)")
             },
+            outputSchema: getPullRequestsOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, state, pagelen, page, all }) => {
@@ -78,6 +86,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 draft: z.boolean().optional().describe("Create as draft pull request"),
                 closeSourceBranch: z.boolean().optional().describe("Close source branch after merge")
             },
+            outputSchema: createPullRequestOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, title, description, sourceBranch, targetBranch, reviewers, draft, closeSourceBranch }) => {
@@ -124,6 +133,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID")
             },
+            outputSchema: getPullRequestOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId }) => {
@@ -161,6 +171,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 title: z.string().optional().describe("New pull request title"),
                 description: z.string().optional().describe("New pull request description")
             },
+            outputSchema: updatePullRequestOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, title, description }) => {
@@ -206,6 +217,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 page: z.number().int().min(1).optional().describe("Page number"),
                 all: z.boolean().optional().describe("Fetch all pages")
             },
+            outputSchema: getPullRequestActivityOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, pagelen, page, all }) => {
@@ -242,6 +254,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID")
             },
+            outputSchema: approvePullRequestOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId }) => {
@@ -277,6 +290,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID")
             },
+            outputSchema: unapprovePullRequestOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId }) => {
@@ -312,6 +326,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID")
             },
+            outputSchema: requestChangesOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId }) => {
@@ -347,6 +362,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 repoSlug: z.string().describe("Repository slug"),
                 pullRequestId: z.number().int().describe("Pull request ID")
             },
+            outputSchema: removeChangeRequestOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId }) => {
@@ -383,6 +399,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 pullRequestId: z.number().int().describe("Pull request ID"),
                 message: z.string().optional().describe("Reason for declining")
             },
+            outputSchema: declinePullRequestOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, message }) => {
@@ -426,6 +443,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 mergeStrategy: MergeStrategyEnum.optional().describe("Merge strategy (merge_commit, squash, fast_forward)"),
                 closeSourceBranch: z.boolean().optional().describe("Close source branch after merge")
             },
+            outputSchema: mergePullRequestOutput,
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, message, mergeStrategy, closeSourceBranch }) => {
@@ -473,6 +491,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 page: z.number().int().min(1).optional().describe("Page number"),
                 all: z.boolean().optional().describe("Fetch all pages")
             },
+            outputSchema: getPullRequestCommitsOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, pagelen, page, all }) => {
@@ -512,6 +531,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 page: z.number().int().min(1).optional().describe("Page number"),
                 all: z.boolean().optional().describe("Fetch all pages")
             },
+            outputSchema: getPullRequestStatusesOutput,
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, pagelen, page, all }) => {

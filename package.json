@@ -1,6 +1,6 @@
 {
     "name": "@mister-good-deal/host-mcp-bitbucket",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Local MCP server for Bitbucket — provides AI assistants with access to Bitbucket repositories, pull requests, comments, diffs, and tasks via REST API",
     "packageManager": "pnpm@10.29.2",
     "type": "module",

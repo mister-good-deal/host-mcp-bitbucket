@@ -1,35 +1,43 @@
 name: Integration Tests
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-  schedule:
-    - cron: "0 3 * * 0" # Weekly on Sunday at 3 AM UTC
+    push:
+        branches: [main, dev]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+    schedule:
+        - cron: "0 3 * * 0" # Weekly on Sunday at 3 AM UTC
 
 jobs:
-  integration:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+    integration:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+            - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+            - run: pnpm install --frozen-lockfile
 
-      - run: pnpm run build
+            - run: pnpm run build
 
-      - name: Run integration tests
-        env:
-          BITBUCKET_TOKEN: ${{ secrets.BITBUCKET_TOKEN }}
-          BITBUCKET_WORKSPACE: ${{ vars.BITBUCKET_WORKSPACE }}
-        run: pnpm run test:integration
+            - name: Start mock Bitbucket API
+              run: docker compose -f docker-compose.integration.yml up -d --wait
+
+            - name: Run integration tests
+              env:
+                  BITBUCKET_URL: http://localhost:7990/2.0
+                  BITBUCKET_TOKEN: test-token
+                  BITBUCKET_WORKSPACE: test-workspace
+              run: pnpm run test:integration
+
+            - name: Stop mock Bitbucket API
+              if: always()
+              run: docker compose -f docker-compose.integration.yml down -v

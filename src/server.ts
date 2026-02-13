@@ -10,6 +10,7 @@ import { registerPullRequestTools } from "./tools/pull-requests.js";
 import { registerCommentTools } from "./tools/comments.js";
 import { registerDiffTools } from "./tools/diffs.js";
 import { registerTaskTools } from "./tools/tasks.js";
+import { registerWorkspaceTools } from "./tools/workspace.js";
 
 export function createServer(config: Config): McpServer {
     const logger = getLogger();
@@ -36,6 +37,7 @@ export function createServer(config: Config): McpServer {
 
     if (defaultWorkspace) logger.info(`Default workspace: ${defaultWorkspace}`);
 
+    registerWorkspaceTools(server, client, defaultWorkspace);
     registerRepositoryTools(server, client, defaultWorkspace);
     registerPullRequestTools(server, client, defaultWorkspace);
     registerCommentTools(server, client, defaultWorkspace);
