@@ -167,9 +167,11 @@ export class PathBuilder {
         return `${this.pullRequestComment(ws, repoSlug, prId, commentId)}/resolve`;
     }
 
-    /** Path for PR diff. */
+    /** Path for PR diff (raw text). On DC uses `.diff` extension for raw output. */
     pullRequestDiff(ws: string, repoSlug: string, prId: number): string {
-        return `${this.pullRequest(ws, repoSlug, prId)}/diff`;
+        return this.isCloud
+            ? `${this.pullRequest(ws, repoSlug, prId)}/diff`
+            : `${this.pullRequests(ws, repoSlug)}/${prId}.diff`;
     }
 
     /** Path for PR diffstat (Cloud) or changes (DC). */

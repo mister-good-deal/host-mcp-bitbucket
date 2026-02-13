@@ -22,6 +22,8 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
         return workspace ?? defaultWorkspace;
     }
 
+    const DC_NOT_SUPPORTED = "Pull request tasks are not available on Bitbucket Data Center via the REST API.";
+
     // ── getPullRequestTasks ──────────────────────────────────────────────
     server.registerTool(
         "getPullRequestTasks",
@@ -39,6 +41,8 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, pagelen, page, all }) => {
+            if (paths.isDataCenter) return toMcpResult(toolError(new Error(DC_NOT_SUPPORTED)));
+
             const ws = resolveWorkspace(workspace);
 
             if (!ws) return toMcpResult(toolError(new Error("Workspace is required.")));
@@ -79,6 +83,8 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, content, commentId, state }) => {
+            if (paths.isDataCenter) return toMcpResult(toolError(new Error(DC_NOT_SUPPORTED)));
+
             const ws = resolveWorkspace(workspace);
 
             if (!ws) return toMcpResult(toolError(new Error("Workspace is required.")));
@@ -125,6 +131,8 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
             annotations: { readOnlyHint: true }
         },
         async({ workspace, repoSlug, pullRequestId, taskId }) => {
+            if (paths.isDataCenter) return toMcpResult(toolError(new Error(DC_NOT_SUPPORTED)));
+
             const ws = resolveWorkspace(workspace);
 
             if (!ws) return toMcpResult(toolError(new Error("Workspace is required.")));
@@ -164,6 +172,8 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, taskId, content, state }) => {
+            if (paths.isDataCenter) return toMcpResult(toolError(new Error(DC_NOT_SUPPORTED)));
+
             const ws = resolveWorkspace(workspace);
 
             if (!ws) return toMcpResult(toolError(new Error("Workspace is required.")));
@@ -208,6 +218,8 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
             annotations: { readOnlyHint: false }
         },
         async({ workspace, repoSlug, pullRequestId, taskId }) => {
+            if (paths.isDataCenter) return toMcpResult(toolError(new Error(DC_NOT_SUPPORTED)));
+
             const ws = resolveWorkspace(workspace);
 
             if (!ws) return toMcpResult(toolError(new Error("Workspace is required.")));

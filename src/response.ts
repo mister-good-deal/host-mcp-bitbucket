@@ -48,7 +48,7 @@ export function toolError(error: unknown): ToolResponse {
  */
 export function toMcpResult(response: ToolResponse) {
     return {
-        content: [{type: "text" as const, text: JSON.stringify(response)}],
+        content: [{ type: "text" as const, text: JSON.stringify(response) }],
         structuredContent: response as unknown as Record<string, unknown>,
         isError: response.status === "FAILED"
     };

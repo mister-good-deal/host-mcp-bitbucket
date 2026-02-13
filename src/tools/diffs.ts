@@ -111,6 +111,10 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, pa
 
             if (!ws) return toMcpResult(toolError(new Error("Workspace is required.")));
 
+            if (paths.isDataCenter) {
+                return toMcpResult(toolError(new Error("getPullRequestPatch is not available on Bitbucket Data Center. Use getPullRequestDiff instead.")));
+            }
+
             logger.debug(`getPullRequestPatch: ${ws}/${repoSlug}#${pullRequestId}`);
 
             try {

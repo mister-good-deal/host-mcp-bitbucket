@@ -41,11 +41,20 @@ export function registerRepositoryTools(server: McpServer, client: BitbucketClie
                 const extraQuery: Record<string, string | number | boolean | undefined | null> = {};
 
                 if (name) {
-                    // Cloud uses q= filter syntax, DC uses name= parameter
+                    // Cloud uses q= filter syntax
                     if (paths.isCloud) {
                         extraQuery.q = `name ~ "${name}"`;
                     } else {
+                        // DC: project-scoped /repos doesn't support name filter; use global /repos endpoint
                         extraQuery.name = name;
+
+                        const result = await client.getPaginated<BitbucketRepository>(
+                            "/repos",
+                            { pagelen, page, all },
+                            extraQuery
+                        );
+
+                        return toMcpResult(toolSuccess(result.values));
                     }
                 }
 

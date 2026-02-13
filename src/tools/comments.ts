@@ -24,7 +24,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
     server.registerTool(
         "getPullRequestComments",
         {
-            description: "List comments on a pull request",
+            description: "List comments on a pull request. On Data Center, comments are extracted from the activity log.",
             inputSchema: {
                 workspace: z.string().optional().describe("Bitbucket workspace name"),
                 repoSlug: z.string().describe("Repository slug"),
@@ -44,6 +44,20 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
             logger.debug(`getPullRequestComments: ${ws}/${repoSlug}#${pullRequestId}`);
 
             try {
+                if (paths.isDataCenter) {
+                    // DC: comments endpoint requires a file path; use activities to get all comments
+                    const activities = await client.getPaginated<Record<string, unknown>>(
+                        paths.pullRequestActivity(ws, repoSlug, pullRequestId),
+                        { pagelen: pagelen ?? 25, page, all: all ?? true }
+                    );
+
+                    const comments = activities.values.
+                        filter(a => a.action === "COMMENTED" && a.comment).
+                        map(a => a.comment as BitbucketComment);
+
+                    return toMcpResult(toolSuccess(comments));
+                }
+
                 const result = await client.getPaginated<BitbucketComment>(
                     paths.pullRequestComments(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
