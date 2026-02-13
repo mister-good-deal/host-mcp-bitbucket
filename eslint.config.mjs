@@ -65,7 +65,6 @@ export default tsEslint.config(
             "@stylistic/quote-props": ["error", "consistent-as-needed"],
             "@stylistic/array-element-newline": ["error", "consistent"],
             "@stylistic/object-curly-spacing": ["error", "always", { objectsInObjects: false }],
-            "@stylistic/curly-newline": ["error", { multiline: true, consistent: true }],
             "@stylistic/brace-style": ["error", "1tbs", { allowSingleLine: true }],
             "@stylistic/lines-between-class-members": [
                 "error",
@@ -124,6 +123,6 @@ export default tsEslint.config(
     },
     {
         name: "ignore",
-        ignores: ["**/node_modules", "**/dist", "**/coverage", "eslint.config.mjs"]
+        ignores: ["**/node_modules", "**/dist", "**/coverage", "eslint.config.mjs", "tests/integration/mock-server/**"]
     }
 );

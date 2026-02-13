@@ -1,27 +1,21 @@
 import { BitbucketClient } from "../../src/bitbucket/client.js";
 
-/** Default integration test Bitbucket config. */
+/** Default integration test Bitbucket config (mock server). */
 export const BITBUCKET_CONFIG = {
-    baseUrl: process.env.BITBUCKET_URL ?? "https://api.bitbucket.org/2.0",
-    token: process.env.BITBUCKET_TOKEN ?? "",
+    baseUrl: process.env.BITBUCKET_URL ?? "http://localhost:7990/2.0",
+    token: process.env.BITBUCKET_TOKEN ?? "test-token",
     timeout: 15_000
 };
 
 /** Default workspace for integration tests. */
-export const TEST_WORKSPACE = process.env.BITBUCKET_WORKSPACE ?? "";
-
-/** Whether integration tests can run (token is available). */
-export const canRunIntegration = !!BITBUCKET_CONFIG.token;
+export const TEST_WORKSPACE = process.env.BITBUCKET_WORKSPACE ?? "test-workspace";
 
 /** Create a BitbucketClient for integration tests. */
 export function createIntegrationClient(): BitbucketClient {
-    return new BitbucketClient({
-        ...BITBUCKET_CONFIG,
-        token: BITBUCKET_CONFIG.token || "dummy-token-for-skip"
-    });
+    return new BitbucketClient(BITBUCKET_CONFIG);
 }
 
-/** Wait until Bitbucket API is reachable, with a timeout. */
+/** Wait until mock Bitbucket API is reachable, with a timeout. */
 export async function waitForBitbucket(client: BitbucketClient, timeoutMs = 30_000): Promise<void> {
     const start = Date.now();
 
@@ -35,5 +29,5 @@ export async function waitForBitbucket(client: BitbucketClient, timeoutMs = 30_0
         }
     }
 
-    throw new Error(`Bitbucket API did not become reachable within ${timeoutMs}ms`);
+    throw new Error(`Mock Bitbucket API did not become reachable within ${timeoutMs}ms`);
 }
