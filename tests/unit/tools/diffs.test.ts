@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { registerDiffTools } from "../../../src/tools/diffs.js";
-import { createMockClient, extractToolResponse, make404 } from "./helpers.js";
+import { createMockClient, createPaths, extractToolResponse, make404 } from "./helpers.js";
 
 describe("Diff Tools", () => {
     let server: McpServer;
@@ -13,6 +13,7 @@ describe("Diff Tools", () => {
         server = new McpServer({ name: "test", version: "0.0.1" });
         client = createMockClient();
         toolHandlers = new Map();
+        const paths = createPaths();
 
         const originalRegisterTool = server.registerTool.bind(server);
 
@@ -25,7 +26,7 @@ describe("Diff Tools", () => {
             return originalRegisterTool(...(args as Parameters<typeof originalRegisterTool>));
         }) as typeof server.registerTool;
 
-        registerDiffTools(server, client, "default-ws");
+        registerDiffTools(server, client, paths, "default-ws");
     });
 
     describe("getPullRequestDiff", () => {

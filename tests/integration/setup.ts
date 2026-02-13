@@ -1,27 +1,39 @@
 import { BitbucketClient } from "../../src/bitbucket/client.js";
+import { detectPlatform, normalizeBaseUrl, PathBuilder, type BitbucketPlatform } from "../../src/bitbucket/utils.js";
 
-/** Default integration test Bitbucket config (mock server). */
+/** Raw URL before normalisation (mock or real). */
+const RAW_URL = process.env.BITBUCKET_URL ?? "http://localhost:7990/2.0";
+
+/** Detected platform. */
+export const TEST_PLATFORM: BitbucketPlatform = detectPlatform(RAW_URL);
+
+/** Default integration test Bitbucket config. */
 export const BITBUCKET_CONFIG = {
-    baseUrl: process.env.BITBUCKET_URL ?? "http://localhost:7990/2.0",
+    baseUrl: normalizeBaseUrl(RAW_URL),
     token: process.env.BITBUCKET_TOKEN ?? "test-token",
-    timeout: 15_000
+    timeout: 15_000,
+    platform: TEST_PLATFORM
 };
 
 /** Default workspace for integration tests. */
 export const TEST_WORKSPACE = process.env.BITBUCKET_WORKSPACE ?? "test-workspace";
+
+/** Pre-built PathBuilder scoped to the detected platform. */
+export const TEST_PATHS = new PathBuilder(TEST_PLATFORM);
 
 /** Create a BitbucketClient for integration tests. */
 export function createIntegrationClient(): BitbucketClient {
     return new BitbucketClient(BITBUCKET_CONFIG);
 }
 
-/** Wait until mock Bitbucket API is reachable, with a timeout. */
+/** Wait until Bitbucket API is reachable, with a timeout. */
 export async function waitForBitbucket(client: BitbucketClient, timeoutMs = 30_000): Promise<void> {
     const start = Date.now();
+    const endpoint = TEST_PLATFORM === "cloud" ? "/user" : "/application-properties";
 
     while (Date.now() - start < timeoutMs) {
         try {
-            await client.get("/user");
+            await client.get(endpoint);
 
             return;
         } catch {
@@ -29,5 +41,5 @@ export async function waitForBitbucket(client: BitbucketClient, timeoutMs = 30_0
         }
     }
 
-    throw new Error(`Mock Bitbucket API did not become reachable within ${timeoutMs}ms`);
+    throw new Error(`Bitbucket API did not become reachable within ${timeoutMs}ms`);
 }

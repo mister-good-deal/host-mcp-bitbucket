@@ -5,6 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { BitbucketClient } from "../bitbucket/client.js";
 import { BitbucketClientError } from "../bitbucket/client.js";
 import type { BitbucketComment } from "../bitbucket/types.js";
+import type { PathBuilder } from "../bitbucket/utils.js";
 import { getLogger } from "../logger.js";
 import { toMcpResult, toolError, toolNotFound, toolSuccess } from "../response.js";
 import {
@@ -12,22 +13,18 @@ import {
     updatePullRequestCommentOutput, deletePullRequestCommentOutput, resolveCommentOutput, reopenCommentOutput
 } from "./output-schemas.js";
 
-export function registerCommentTools(server: McpServer, client: BitbucketClient, defaultWorkspace?: string): void {
+export function registerCommentTools(server: McpServer, client: BitbucketClient, paths: PathBuilder, defaultWorkspace?: string): void {
     const logger = getLogger();
 
     function resolveWorkspace(workspace?: string) {
         return workspace ?? defaultWorkspace;
     }
 
-    function prCommentsPath(ws: string, repoSlug: string, pullRequestId: number) {
-        return `/repositories/${ws}/${repoSlug}/pullrequests/${pullRequestId}/comments`;
-    }
-
     // ── getPullRequestComments ───────────────────────────────────────────
     server.registerTool(
         "getPullRequestComments",
         {
-            description: "List comments on a pull request",
+            description: "List comments on a pull request. On Data Center, comments are extracted from the activity log.",
             inputSchema: {
                 workspace: z.string().optional().describe("Bitbucket workspace name"),
                 repoSlug: z.string().describe("Repository slug"),
@@ -47,8 +44,22 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
             logger.debug(`getPullRequestComments: ${ws}/${repoSlug}#${pullRequestId}`);
 
             try {
+                if (paths.isDataCenter) {
+                    // DC: comments endpoint requires a file path; use activities to get all comments
+                    const activities = await client.getPaginated<Record<string, unknown>>(
+                        paths.pullRequestActivity(ws, repoSlug, pullRequestId),
+                        { pagelen: pagelen ?? 25, page, all: all ?? true }
+                    );
+
+                    const comments = activities.values.
+                        filter(a => a.action === "COMMENTED" && a.comment).
+                        map(a => a.comment as BitbucketComment);
+
+                    return toMcpResult(toolSuccess(comments));
+                }
+
                 const result = await client.getPaginated<BitbucketComment>(
-                    prCommentsPath(ws, repoSlug, pullRequestId),
+                    paths.pullRequestComments(ws, repoSlug, pullRequestId),
                     { pagelen, page, all }
                 );
 
@@ -86,7 +97,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
 
             try {
                 const comment = await client.get<BitbucketComment>(
-                    `${prCommentsPath(ws, repoSlug, pullRequestId)}/${commentId}`
+                    paths.pullRequestComment(ws, repoSlug, pullRequestId, commentId)
                 );
 
                 return toMcpResult(toolSuccess(comment));
@@ -128,16 +139,31 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
             logger.debug(`addPullRequestComment: ${ws}/${repoSlug}#${pullRequestId}`);
 
             try {
-                const body: Record<string, unknown> = {
-                    content: { raw: content }
-                };
+                let body: Record<string, unknown>;
 
-                if (inline) body.inline = inline;
+                if (paths.isCloud) {
+                    body = { content: { raw: content }};
 
-                if (parentId) body.parent = { id: parentId };
+                    if (inline) body.inline = inline;
+
+                    if (parentId) body.parent = { id: parentId };
+                } else {
+                    body = { text: content };
+
+                    if (inline) {
+                        body.anchor = {
+                            path: inline.path,
+                            line: inline.to ?? inline.from,
+                            lineType: inline.to ? "ADDED" : "REMOVED",
+                            fileType: inline.to ? "TO" : "FROM"
+                        };
+                    }
+
+                    if (parentId) body.parent = { id: parentId };
+                }
 
                 const comment = await client.post<BitbucketComment>(
-                    prCommentsPath(ws, repoSlug, pullRequestId),
+                    paths.pullRequestComments(ws, repoSlug, pullRequestId),
                     body
                 );
 
@@ -175,9 +201,13 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
             logger.debug(`updatePullRequestComment: ${ws}/${repoSlug}#${pullRequestId}, comment=${commentId}`);
 
             try {
+                const body = paths.isCloud
+                    ? { content: { raw: content }}
+                    : { text: content };
+
                 const comment = await client.put<BitbucketComment>(
-                    `${prCommentsPath(ws, repoSlug, pullRequestId)}/${commentId}`,
-                    { content: { raw: content }}
+                    paths.pullRequestComment(ws, repoSlug, pullRequestId, commentId),
+                    body
                 );
 
                 return toMcpResult(toolSuccess(comment, "Comment updated."));
@@ -214,7 +244,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
 
             try {
                 await client.delete(
-                    `${prCommentsPath(ws, repoSlug, pullRequestId)}/${commentId}`
+                    paths.pullRequestComment(ws, repoSlug, pullRequestId, commentId)
                 );
 
                 return toMcpResult(toolSuccess(true, "Comment deleted."));
@@ -251,7 +281,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
 
             try {
                 const result = await client.put<BitbucketComment>(
-                    `${prCommentsPath(ws, repoSlug, pullRequestId)}/${commentId}/resolve`
+                    paths.pullRequestCommentResolve(ws, repoSlug, pullRequestId, commentId)
                 );
 
                 return toMcpResult(toolSuccess(result, "Comment resolved."));
@@ -288,7 +318,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
 
             try {
                 await client.delete(
-                    `${prCommentsPath(ws, repoSlug, pullRequestId)}/${commentId}/resolve`
+                    paths.pullRequestCommentResolve(ws, repoSlug, pullRequestId, commentId)
                 );
 
                 return toMcpResult(toolSuccess(true, "Comment reopened."));

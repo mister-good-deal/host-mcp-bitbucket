@@ -2,17 +2,19 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { registerWorkspaceTools } from "../../../src/tools/workspace.js";
-import { createMockClient, extractToolResponse, make404 } from "./helpers.js";
+import { createMockClient, createPaths, extractToolResponse, make404 } from "./helpers.js";
 
 describe("Workspace Tools", () => {
     let server: McpServer;
     let client: ReturnType<typeof createMockClient>;
     let toolHandlers: Map<string, (args: Record<string, unknown>) => Promise<unknown>>;
+    let paths: ReturnType<typeof createPaths>;
 
     beforeEach(() => {
         server = new McpServer({ name: "test", version: "0.0.1" });
         client = createMockClient();
         toolHandlers = new Map();
+        paths = createPaths();
 
         const originalRegisterTool = server.registerTool.bind(server);
 
@@ -25,7 +27,7 @@ describe("Workspace Tools", () => {
             return originalRegisterTool(...(args as Parameters<typeof originalRegisterTool>));
         }) as typeof server.registerTool;
 
-        registerWorkspaceTools(server, client, "default-ws");
+        registerWorkspaceTools(server, client, paths, "default-ws");
     });
 
     describe("getCurrentUser", () => {
@@ -116,14 +118,14 @@ describe("Workspace Tools", () => {
                 return originalRegister(...(args as Parameters<typeof originalRegister>));
             }) as typeof noDefaultServer.registerTool;
 
-            registerWorkspaceTools(noDefaultServer, client);
+            registerWorkspaceTools(noDefaultServer, client, paths);
 
             const handler = noDefaultHandlers.get("getWorkspace")!;
             const result = await handler({}) as ReturnType<typeof extractToolResponse>;
             const response = extractToolResponse(result as never);
 
             expect(response.status).toBe("FAILED");
-            expect(response.message).toContain("Workspace is required");
+            expect(response.message).toContain("is required");
         });
 
         it("should return not found for non-existent workspace", async() => {
