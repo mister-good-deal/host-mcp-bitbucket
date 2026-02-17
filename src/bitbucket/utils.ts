@@ -91,7 +91,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-users/#api-user-get
      *
      * DC:   Returns /users — the tool handler falls back to GET /rest/api/latest/application-properties for auth verification.
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-system-maintenance/#api-api-latest-application-properties-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-system-maintenance/#api-api-latest-application-properties-get
      */
     currentUser(): string {
         return this.isCloud ? "/user" : "/users";
@@ -104,7 +104,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-workspaces/#api-workspaces-workspace-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-project/#api-api-latest-projects-projectkey-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-project/#api-api-latest-projects-projectkey-get
      */
     workspace(ws: string): string {
         return this.isCloud ? `/workspaces/${ws}` : `/projects/${ws}`;
@@ -117,7 +117,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-repositories/#api-repositories-workspace-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-get
      */
     repositories(ws: string): string {
         return this.isCloud ? `/repositories/${ws}` : `/projects/${ws}/repos`;
@@ -130,7 +130,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-repositories/#api-repositories-workspace-repo-slug-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-get
      */
     repository(ws: string, repoSlug: string): string {
         return this.isCloud ? `/repositories/${ws}/${repoSlug}` : `/projects/${ws}/repos/${repoSlug}`;
@@ -148,7 +148,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-get
      */
     pullRequests(ws: string, repoSlug: string): string {
         return this.isCloud
@@ -163,7 +163,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-get
      */
     pullRequest(ws: string, repoSlug: string, prId: number): string {
         return `${this.pullRequests(ws, repoSlug)}/${prId}`;
@@ -176,7 +176,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-activity-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/activities
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-activities-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-activities-get
      */
     pullRequestActivity(ws: string, repoSlug: string, prId: number): string {
         return this.isCloud
@@ -191,7 +191,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-approve-post
      *
      * DC:   POST /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/approve
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-approve-post
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-approve-post
      */
     pullRequestApprove(ws: string, repoSlug: string, prId: number): string {
         return `${this.pullRequest(ws, repoSlug, prId)}/approve`;
@@ -214,7 +214,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-decline-post
      *
      * DC:   POST /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/decline
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-decline-post
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-decline-post
      */
     pullRequestDecline(ws: string, repoSlug: string, prId: number): string {
         return `${this.pullRequest(ws, repoSlug, prId)}/decline`;
@@ -227,7 +227,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-merge-post
      *
      * DC:   POST /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/merge
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-merge-post
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-merge-post
      */
     pullRequestMerge(ws: string, repoSlug: string, prId: number): string {
         return `${this.pullRequest(ws, repoSlug, prId)}/merge`;
@@ -240,7 +240,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-commits-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/commits
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-commits-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-commits-get
      */
     pullRequestCommits(ws: string, repoSlug: string, prId: number): string {
         return `${this.pullRequest(ws, repoSlug, prId)}/commits`;
@@ -265,7 +265,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-comments-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comments
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-comments-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-comments-get
      */
     pullRequestComments(ws: string, repoSlug: string, prId: number): string {
         return `${this.pullRequest(ws, repoSlug, prId)}/comments`;
@@ -278,7 +278,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-comments-comment-id-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comments/{commentId}
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-comments-commentid-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-comments-commentid-get
      */
     pullRequestComment(ws: string, repoSlug: string, prId: number, commentId: number): string {
         return `${this.pullRequestComments(ws, repoSlug, prId)}/${commentId}`;
@@ -303,7 +303,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-diff-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}.diff
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-diff-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-diff-get
      */
     pullRequestDiff(ws: string, repoSlug: string, prId: number): string {
         return this.isCloud
@@ -318,7 +318,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-diffstat-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/changes
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-changes-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-changes-get
      */
     pullRequestDiffStat(ws: string, repoSlug: string, prId: number): string {
         return this.isCloud
@@ -345,7 +345,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-tasks-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/blocker-comments
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-blocker-comments-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-blocker-comments-get
      */
     pullRequestTasks(ws: string, repoSlug: string, prId: number): string {
         return this.isCloud
@@ -360,7 +360,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-tasks-task-id-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/blocker-comments/{blockerId}
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-blocker-comments-blockerid-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-blocker-comments-blockerid-get
      */
     pullRequestTask(ws: string, repoSlug: string, prId: number, taskId: number): string {
         return `${this.pullRequestTasks(ws, repoSlug, prId)}/${taskId}`;
@@ -373,7 +373,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-refs/#api-repositories-workspace-repo-slug-refs-branches-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/branches
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-branches-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-branches-get
      */
     branches(ws: string, repoSlug: string): string {
         return this.isCloud
@@ -388,7 +388,7 @@ export class PathBuilder {
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-refs/#api-repositories-workspace-repo-slug-refs-tags-get
      *
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/tags
-     * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-tags-get
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-tags-get
      */
     tags(ws: string, repoSlug: string): string {
         return this.isCloud

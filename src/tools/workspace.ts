@@ -18,7 +18,7 @@ export function registerWorkspaceTools(server: McpServer, client: BitbucketClien
      * Cloud: GET /2.0/user
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-users/#api-user-get
      * DC:   GET /rest/api/latest/application-properties
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-system-maintenance/#api-api-latest-application-properties-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-system-maintenance/#api-api-latest-application-properties-get
      */
     server.registerTool(
         "getCurrentUser",
@@ -58,7 +58,7 @@ export function registerWorkspaceTools(server: McpServer, client: BitbucketClien
      * Cloud: GET /2.0/workspaces/{workspace}
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-workspaces/#api-workspaces-workspace-get
      * DC:   GET /rest/api/latest/projects/{projectKey}
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-project/#api-api-latest-projects-projectkey-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-project/#api-api-latest-projects-projectkey-get
      */
     server.registerTool(
         "getWorkspace",

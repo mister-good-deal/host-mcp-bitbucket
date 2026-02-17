@@ -31,7 +31,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/pullrequests
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-get
      */
     server.registerTool(
         "getPullRequests",
@@ -82,7 +82,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: POST /2.0/repositories/{workspace}/{repo_slug}/pullrequests
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-post
      * DC:   POST /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-post
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-post
      */
     server.registerTool(
         "createPullRequest",
@@ -155,7 +155,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-get
      */
     server.registerTool(
         "getPullRequest",
@@ -197,7 +197,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: PUT /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-put
      * DC:   PUT /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-put
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-put
      */
     server.registerTool(
         "updatePullRequest",
@@ -248,7 +248,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/activity
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-activity-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/activities
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-activities-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-activities-get
      */
     server.registerTool(
         "getPullRequestActivity",
@@ -294,7 +294,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: POST /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/approve
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-approve-post
      * DC:   POST /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/approve
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-approve-post
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-approve-post
      */
     server.registerTool(
         "approvePullRequest",
@@ -336,7 +336,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: DELETE /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/approve
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-approve-delete
      * DC:   DELETE /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/approve
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-approve-delete
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-approve-delete
      */
     server.registerTool(
         "unapprovePullRequest",
@@ -458,7 +458,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: POST /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/decline
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-decline-post
      * DC:   POST /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/decline
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-decline-post
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-decline-post
      */
     server.registerTool(
         "declinePullRequest",
@@ -506,7 +506,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: POST /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/merge
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-merge-post
      * DC:   POST /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/merge
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-merge-post
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-merge-post
      */
     server.registerTool(
         "mergePullRequest",
@@ -560,7 +560,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/commits
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-commits-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/commits
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-commits-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-commits-get
      */
     server.registerTool(
         "getPullRequestCommits",

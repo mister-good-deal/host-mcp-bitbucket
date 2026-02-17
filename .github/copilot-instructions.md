@@ -30,7 +30,7 @@ Add a new method to the `PathBuilder` class that returns the **platform-specific
  * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-<group>/#api-<anchor>
  *
  * DC:    <HTTP_METHOD> /rest/api/latest/<dc_path>
- * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-<group>/#api-<anchor>
+ * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-<group>/#api-<anchor>
  */
 newEndpoint(ws: string, repoSlug: string, ...ids: number[]): string {
     return this.isCloud
@@ -69,7 +69,7 @@ Add a comment linking to the API documentation _above_ the tool registration:
 // Cloud: <HTTP_METHOD> /2.0/<cloud_path>
 //   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-<group>/#api-<anchor>
 // DC:   <HTTP_METHOD> /rest/api/latest/<dc_path>
-//   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-<group>/#api-<anchor>
+//   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-<group>/#api-<anchor>
 server.registerTool(
     "newTool",
     {

@@ -21,7 +21,7 @@ export function registerRefTools(server: McpServer, client: BitbucketClient, pat
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/refs/branches
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-refs/#api-repositories-workspace-repo-slug-refs-branches-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/branches
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-branches-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-branches-get
      */
     server.registerTool(
         "listBranches",
@@ -78,7 +78,7 @@ export function registerRefTools(server: McpServer, client: BitbucketClient, pat
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/refs/tags
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-refs/#api-repositories-workspace-repo-slug-refs-tags-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/tags
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-tags-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-tags-get
      */
     server.registerTool(
         "listTags",

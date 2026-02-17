@@ -18,7 +18,7 @@ export function registerRepositoryTools(server: McpServer, client: BitbucketClie
      * Cloud: GET /2.0/repositories/{workspace}
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-repositories/#api-repositories-workspace-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-get
      */
     server.registerTool(
         "listRepositories",
@@ -84,7 +84,7 @@ export function registerRepositoryTools(server: McpServer, client: BitbucketClie
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-repositories/#api-repositories-workspace-repo-slug-get
      * DC:   GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}
-     *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-get
+     *   https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-repository/#api-api-latest-projects-projectkey-repos-repositoryslug-get
      */
     server.registerTool(
         "getRepository",
