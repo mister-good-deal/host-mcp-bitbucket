@@ -24,7 +24,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
      * ── getPullRequestComments ───────────────────────────────────────────
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/comments
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-comments-get
-     * DC:   Extracted from GET /rest/api/latest/.../pull-requests/{pullRequestId}/activities
+     * DC:   Extracted from GET /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/activities
      *   https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-activities-get
      */
     server.registerTool(
@@ -292,7 +292,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
      * ── resolveComment ───────────────────────────────────────────────────
      * Cloud: PUT /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/comments/{comment_id}/resolve
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-comments-comment-id-resolve-put
-     * DC:   PUT /rest/api/latest/.../pull-requests/{pullRequestId}/comments/{commentId}/resolve
+     * DC:   PUT /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comments/{commentId}/resolve
      */
     server.registerTool(
         "resolveComment",
@@ -334,7 +334,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
      * ── reopenComment ────────────────────────────────────────────────────
      * Cloud: DELETE /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/comments/{comment_id}/resolve
      *   https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-comments-comment-id-resolve-delete
-     * DC:   DELETE /rest/api/latest/.../pull-requests/{pullRequestId}/comments/{commentId}/resolve
+     * DC:   DELETE /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/comments/{commentId}/resolve
      */
     server.registerTool(
         "reopenComment",

@@ -90,7 +90,7 @@ export class PathBuilder {
      * Cloud: GET /2.0/user
      * @see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-users/#api-user-get
      *
-     * DC:   GET /rest/api/latest/application-properties (no direct /user endpoint)
+     * DC:   Returns /users — the tool handler falls back to GET /rest/api/latest/application-properties for auth verification.
      * @see https://developer.atlassian.com/server/bitbucket/rest/v823/api-group-system-maintenance/#api-api-latest-application-properties-get
      */
     currentUser(): string {
