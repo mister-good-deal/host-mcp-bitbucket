@@ -12,6 +12,7 @@ import { registerDiffTools } from "./tools/diffs.js";
 import { registerTaskTools } from "./tools/tasks.js";
 import { registerWorkspaceTools } from "./tools/workspace.js";
 import { registerRefTools } from "./tools/refs.js";
+import { registerReviewTools } from "./tools/reviews.js";
 
 export function createServer(config: Config): McpServer {
     const logger = getLogger();
@@ -49,6 +50,7 @@ export function createServer(config: Config): McpServer {
     registerDiffTools(server, client, paths, defaultWorkspace);
     registerTaskTools(server, client, paths, defaultWorkspace);
     registerRefTools(server, client, paths, defaultWorkspace);
+    registerReviewTools(server, client, paths, defaultWorkspace);
 
     logger.info("All MCP tools registered successfully");
 

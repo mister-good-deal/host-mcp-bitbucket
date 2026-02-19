@@ -367,6 +367,16 @@ export class PathBuilder {
     }
 
     /**
+     * Path for the pending review on a pull request (DC only).
+     *
+     * DC:   GET|PUT|DELETE /rest/api/latest/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/review
+     * @see https://developer.atlassian.com/server/bitbucket/rest/v1000/api-group-pull-requests/#api-api-latest-projects-projectkey-repos-repositoryslug-pull-requests-pullrequestid-review-get
+     */
+    pullRequestReview(ws: string, repoSlug: string, prId: number): string {
+        return `${this.pullRequest(ws, repoSlug, prId)}/review`;
+    }
+
+    /**
      * Path for listing branches.
      *
      * Cloud: GET /2.0/repositories/{workspace}/{repo_slug}/refs/branches

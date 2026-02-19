@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-19
+
+### Added
+
+- **Pending review tools** (Data Center only): staged review workflow where draft comments remain invisible until explicitly submitted
+  - `addPendingReviewComment` — create a pending (draft) comment on a pull request (general, inline on file/line, or threaded reply); uses `POST /comments` with `"state": "PENDING"`
+  - `getPendingReview` — retrieve the current user's pending review with all draft comment threads via `GET .../review`
+  - `submitPendingReview` — publish all pending comments via `PUT .../review`; optionally sets participant status (`APPROVED`, `NEEDS_WORK`, `UNAPPROVED`) and a summary comment
+  - `discardPendingReview` — permanently delete all draft comments via `DELETE .../review`
+- `PathBuilder.pullRequestReview()` method for the DC `/review` endpoint
+- `ParticipantStatus`, `BitbucketDCPendingReview`, and `BitbucketDCReviewSubmitRequest` types
+- Output schemas for all 4 review tools
+- Unit tests for all review tools (DC operations, 404 handling, workspace validation, Cloud rejection)
+
+### Changed
+
+- Lock files (`pnpm-lock.yaml`, `package-lock.json`) removed from git tracking and added to `.gitignore`
+- Copyright year updated to 2026 in LICENSE
+
 ## [0.3.0] - 2026-02-13
 
 ### Added
