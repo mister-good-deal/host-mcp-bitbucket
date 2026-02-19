@@ -5,4 +5,3 @@ coverage/
 .env
 .vscode/
 package-lock.json
-pnpm-lock.yaml

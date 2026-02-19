@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Lock files (`pnpm-lock.yaml`, `package-lock.json`) removed from git tracking and added to `.gitignore`
+- `package-lock.json` removed from git tracking (pnpm project, only `pnpm-lock.yaml` is needed)
 - Copyright year updated to 2026 in LICENSE
 
 ## [0.3.0] - 2026-02-13
