@@ -101,6 +101,16 @@ export const listBranchesOutput = ToolResponseSchema.describe("Repository branch
 
 export const listTagsOutput = ToolResponseSchema.describe("Repository tags");
 
+// ── Review tools (DC pending review) ─────────────────────────────────────
+
+export const addPendingReviewCommentOutput = ToolResponseSchema.describe("Pending review comment added");
+
+export const getPendingReviewOutput = ToolResponseSchema.describe("Pending review details");
+
+export const submitPendingReviewOutput = ToolResponseSchema.describe("Pending review submitted");
+
+export const discardPendingReviewOutput = ToolResponseSchema.describe("Pending review discarded");
+
 /**
  * Map of tool name → output schema, for easy wiring into registerTool.
  */
@@ -145,5 +155,10 @@ export const OUTPUT_SCHEMAS: Record<string, z.ZodType> = {
     deletePullRequestTask: deletePullRequestTaskOutput,
     // Refs (branches/tags)
     listBranches: listBranchesOutput,
-    listTags: listTagsOutput
+    listTags: listTagsOutput,
+    // Reviews (DC pending review)
+    addPendingReviewComment: addPendingReviewCommentOutput,
+    getPendingReview: getPendingReviewOutput,
+    submitPendingReview: submitPendingReviewOutput,
+    discardPendingReview: discardPendingReviewOutput
 };

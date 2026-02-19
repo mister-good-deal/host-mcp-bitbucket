@@ -156,6 +156,21 @@ export interface BitbucketBlockerComment {
     [key: string]: unknown;
 }
 
+// ── DC Pending Review ────────────────────────────────────────────────────
+
+export type ParticipantStatus = "APPROVED" | "NEEDS_WORK" | "UNAPPROVED";
+
+export interface BitbucketDCPendingReview {
+    [key: string]: unknown;
+}
+
+export interface BitbucketDCReviewSubmitRequest {
+    commentText?: string;
+    lastReviewedCommit?: string;
+    participantStatus?: ParticipantStatus;
+    [key: string]: unknown;
+}
+
 // ── PR Diff ──────────────────────────────────────────────────────────────
 
 export interface BitbucketDiffStat {

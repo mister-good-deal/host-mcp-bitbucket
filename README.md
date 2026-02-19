@@ -23,6 +23,7 @@ Works with both **Bitbucket Cloud** and **Bitbucket Server/Data Center** instanc
 - **PR comments** — add, update, delete, resolve/reopen comments (including inline comments)
 - **PR diffs** — get raw diffs, diff statistics, and patches
 - **PR tasks** — create, update, delete tasks on pull requests
+- **Pending reviews** — stage draft review comments, then submit or discard the entire review at once (Data Center only)
 - **Branch & tag listing** — list branches and tags with optional filtering
 - **Pagination** — automatic pagination with `all` mode (capped at 1000 items); Cloud and DC pagination styles handled transparently
 - **Dual transport** — stdio (default) and Streamable HTTP
@@ -167,6 +168,19 @@ Tasks on Cloud use the standard tasks API. On Data Center, tasks are implemented
 | `getPullRequestTask` | Get a specific task |
 | `updatePullRequestTask` | Update a task (content, state). On DC, version is fetched automatically for optimistic concurrency |
 | `deletePullRequestTask` | Delete a task. On DC, version is fetched automatically for optimistic concurrency |
+
+### Pending Review Operations (Data Center only)
+
+These tools enable a staged review workflow: an AI agent drafts review comments that remain invisible until a human reviewer submits or discards the entire review.
+
+| Tool | Description |
+|------|-------------|
+| `addPendingReviewComment` | Add a pending (draft) review comment — general, inline, or reply |
+| `getPendingReview` | Get the current user's pending review with all draft comment threads |
+| `submitPendingReview` | Publish all pending comments, optionally setting approval status and a summary |
+| `discardPendingReview` | Discard all pending comments permanently |
+
+> **Note:** Pending reviews require Bitbucket Data Center. On Cloud, these tools return a clear error message.
 
 ### Branch & Tag Operations
 
