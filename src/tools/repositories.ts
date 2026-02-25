@@ -71,7 +71,7 @@ export function registerRepositoryTools(server: McpServer, client: BitbucketClie
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) return toMcpResult(toolNotFound("Workspace/Project", ws));
 
                 return toMcpResult(toolError(error));
@@ -110,7 +110,7 @@ export function registerRepositoryTools(server: McpServer, client: BitbucketClie
                 const repo = await client.get<BitbucketRepository>(paths.repository(ws, repoSlug));
 
                 return toMcpResult(toolSuccess(repo));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Repository", `${ws}/${repoSlug}`));
                 }

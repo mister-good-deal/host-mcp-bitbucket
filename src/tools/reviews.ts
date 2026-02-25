@@ -80,7 +80,7 @@ export function registerReviewTools(server: McpServer, client: BitbucketClient, 
                 );
 
                 return toMcpResult(toolSuccess(comment, "Pending review comment added."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -122,7 +122,7 @@ export function registerReviewTools(server: McpServer, client: BitbucketClient, 
                 );
 
                 return toMcpResult(toolSuccess(review));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pending Review", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -179,7 +179,7 @@ export function registerReviewTools(server: McpServer, client: BitbucketClient, 
                 );
 
                 return toMcpResult(toolSuccess(result, "Pending review submitted."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pending Review", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -221,7 +221,7 @@ export function registerReviewTools(server: McpServer, client: BitbucketClient, 
                 );
 
                 return toMcpResult(toolSuccess(null, "Pending review discarded. All draft comments have been deleted."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pending Review", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
