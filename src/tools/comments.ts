@@ -70,7 +70,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -113,7 +113,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 );
 
                 return toMcpResult(toolSuccess(comment));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Comment", `${commentId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -186,7 +186,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 );
 
                 return toMcpResult(toolSuccess(comment, "Comment added."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -235,7 +235,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 );
 
                 return toMcpResult(toolSuccess(comment, "Comment updated."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Comment", `${commentId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -278,7 +278,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 );
 
                 return toMcpResult(toolSuccess(true, "Comment deleted."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Comment", `${commentId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -320,7 +320,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 );
 
                 return toMcpResult(toolSuccess(result, "Comment resolved."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Comment", `${commentId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -362,7 +362,7 @@ export function registerCommentTools(server: McpServer, client: BitbucketClient,
                 );
 
                 return toMcpResult(toolSuccess(true, "Comment reopened."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Comment", `${commentId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }

@@ -47,7 +47,7 @@ export function registerWorkspaceTools(server: McpServer, client: BitbucketClien
                     type: "user" as const,
                     ...props
                 }, "Authenticated successfully (Data Center)."));
-            } catch (error) {
+            } catch(error) {
                 return toMcpResult(toolError(error));
             }
         }
@@ -83,7 +83,7 @@ export function registerWorkspaceTools(server: McpServer, client: BitbucketClien
                 const result = await client.get<BitbucketWorkspace>(paths.workspace(ws));
 
                 return toMcpResult(toolSuccess(result));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Workspace/Project", ws));
                 }

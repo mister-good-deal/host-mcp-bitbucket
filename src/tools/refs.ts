@@ -63,7 +63,7 @@ export function registerRefTools(server: McpServer, client: BitbucketClient, pat
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Repository", `${ws}/${repoSlug}`));
                 }
@@ -120,7 +120,7 @@ export function registerRefTools(server: McpServer, client: BitbucketClient, pat
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Repository", `${ws}/${repoSlug}`));
                 }
