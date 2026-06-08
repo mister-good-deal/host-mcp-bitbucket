@@ -26,7 +26,7 @@ Works with both **Bitbucket Cloud** and **Bitbucket Server/Data Center** instanc
 - **Pending reviews** — stage draft review comments, then submit or discard the entire review at once (Data Center only)
 - **Branch & tag listing** — list branches and tags with optional filtering
 - **Pagination** — automatic pagination with `all` mode (capped at 1000 items); Cloud and DC pagination styles handled transparently
-- **Dual transport** — stdio (default) and Streamable HTTP
+- **Dual transport** — stdio (default) and **stateless** Streamable HTTP (per-request sessions; supports concurrent clients and reconnections)
 - **Retry with backoff** — automatic retry on transient errors (429, 5xx)
 
 ## Quick Start
