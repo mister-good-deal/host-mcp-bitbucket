@@ -227,6 +227,19 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
 
                 if (description !== undefined) body.description = description;
 
+                /*
+                 * Bitbucket Data Center uses optimistic locking: the PUT must carry the PR's current
+                 * `version`, otherwise it is rejected with 400 "version must be supplied". Fetch it first.
+                 * Bitbucket Cloud has no such field, so only do this on Data Center.
+                 */
+                if (client.isDataCenter) {
+                    const current = await client.get<BitbucketPullRequest>(
+                        paths.pullRequest(ws, repoSlug, pullRequestId)
+                    );
+
+                    body.version = current.version;
+                }
+
                 const pr = await client.put<BitbucketPullRequest>(
                     paths.pullRequest(ws, repoSlug, pullRequestId),
                     body
