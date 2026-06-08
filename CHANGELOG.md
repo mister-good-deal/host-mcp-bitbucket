@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-06-08
+
+### Fixed
+
+- **Streamable HTTP transport is now stateless.** `startHttpTransport` created a single `Server` + `StreamableHTTPServerTransport` at startup and reused them for every `/mcp` request; the MCP SDK only accepts one `initialize`, so the second client — or any reconnection — failed the handshake with `-32600 "Server already initialized"`. A fresh server + transport are now created per request (`sessionIdGenerator: undefined`), torn down on response close, so concurrent clients and reconnections each get an independent session. `GET`/`DELETE` on `/mcp` return `405` (no server→client stream to maintain in stateless mode). (#5)
+- **`updatePullRequest` on Bitbucket Data Center.** Data Center uses optimistic locking: `PUT .../pull-requests/{id}` must include the PR's current `version`, otherwise it is rejected with `400 "version must be supplied"` — which made every PR update fail. The current `version` is now fetched and sent on Data Center (Cloud is unaffected). (#6)
+
 ## [0.4.0] - 2026-02-19
 
 ### Added
