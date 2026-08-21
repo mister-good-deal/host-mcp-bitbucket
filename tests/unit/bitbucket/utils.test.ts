@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 
-import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString, detectPlatform, PathBuilder } from "../../../src/bitbucket/utils.js";
+import { normalizeBaseUrl, extractWorkspaceFromUrl, buildQueryString, detectPlatform, slugify, PathBuilder } from "../../../src/bitbucket/utils.js";
 
 describe("detectPlatform", () => {
     it("should detect bitbucket.org as cloud", () => {
@@ -149,5 +149,31 @@ describe("PathBuilder", () => {
         it("should use /blocker-comments/{id} path for pullRequestTask", () => {
             expect(paths.pullRequestTask("PL", "my-repo", 1, 42)).toBe("/projects/PL/repos/my-repo/pull-requests/1/blocker-comments/42");
         });
+    });
+});
+
+describe("slugify", () => {
+    it("should lowercase and hyphenate a name", () => {
+        expect(slugify("My New Repo")).toBe("my-new-repo");
+    });
+
+    it("should collapse runs of non-alphanumeric characters", () => {
+        expect(slugify("My   New___Repo!!")).toBe("my-new-repo");
+    });
+
+    it("should trim leading and trailing separators", () => {
+        expect(slugify("  -Repo-  ")).toBe("repo");
+    });
+
+    it("should strip accents", () => {
+        expect(slugify("Dépôt Créé")).toBe("depot-cree");
+    });
+
+    it("should keep an already valid slug unchanged", () => {
+        expect(slugify("my-repo-2")).toBe("my-repo-2");
+    });
+
+    it("should return an empty string when nothing usable remains", () => {
+        expect(slugify("!!!")).toBe("");
     });
 });

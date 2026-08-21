@@ -65,6 +65,17 @@ export function buildQueryString(params: Record<string, string | number | boolea
     return parts.length > 0 ? `?${parts.join("&")}` : "";
 }
 
+/**
+ * Slugifies a repository name the way Bitbucket Cloud does:
+ * lowercase, non-alphanumeric runs collapsed into a single hyphen, trimmed.
+ * e.g. `My New Repo!` → `my-new-repo`
+ */
+export function slugify(name: string): string {
+    const ascii = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+
+    return ascii.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 // ── Path builder ─────────────────────────────────────────────────────────
 
 /**
