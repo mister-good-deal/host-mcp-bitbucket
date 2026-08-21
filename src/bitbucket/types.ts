@@ -73,6 +73,7 @@ export type PullRequestState = "OPEN" | "MERGED" | "DECLINED" | "SUPERSEDED";
 
 export interface BitbucketPullRequest {
     id: number;
+    version?: number; // Bitbucket Data Center: optimistic-lock version, required on update
     title: string;
     description: string;
     state: PullRequestState;
