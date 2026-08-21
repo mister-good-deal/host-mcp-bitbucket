@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-21
+
+### Added
+
+- `createRepository` tool — create a repository on Bitbucket Cloud (`POST /2.0/repositories/{workspace}/{repo_slug}`) or Data Center (`POST /rest/api/latest/projects/{projectKey}/repos`) (#8, #9)
+  - Cloud slug is derived from `name` via the new `slugify()` helper, or set explicitly with `repoSlug`; on Data Center the server derives it and `repoSlug` is reported as ignored in the response message
+  - Cross-platform flag mapping: `isPrivate` → `is_private` (Cloud) / `public` inverted (DC), `forkable` → `fork_policy` (Cloud) / `forkable` (DC)
+  - `defaultBranch` is Data Center only — Cloud cannot set it before a branch exists, so it is ignored and reported in the response message
+  - `projectKey` places the repository in a project on Cloud and doubles as a workspace alias on DC
+  - Explicit error mapping: `409` (name already taken), `401`/`403` (missing repository-creation permission, message names the workspace/project), `404` (unknown workspace/project)
+  - Annotated `readOnlyHint: false, destructiveHint: false, idempotentHint: false`
+- `slugify()` utility in `src/bitbucket/utils.ts`
+- Unit tests for `createRepository` (Cloud + DC bodies, flag mapping, error mapping) and `slugify()`; integration tests against the Docker mock for both platforms — 175 unit + 102 integration tests
+- `CLAUDE.md` — project context and conventions for AI assistants
+
+### Changed
+
+- All dependencies upgraded to their latest major versions: zod 3 → 4, commander 13 → 14, eslint 9 → 10, jest 29 → 30, `@eslint/js` 9 → 10, `@stylistic/eslint-plugin` 4 → 5, `globals` 16 → 17, `@types/jest` 29 → 30, plus MCP SDK, winston, tsx and typescript to latest minors
+
 ## [0.4.1] - 2026-06-08
 
 ### Fixed

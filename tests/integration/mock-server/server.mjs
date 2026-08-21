@@ -509,6 +509,54 @@ const server = createServer(async(req, res) => {
 
     const repoGetMatch = path.match(/^\/2\.0\/repositories\/([^\/]+)\/([^\/]+)$/);
 
+    if (repoGetMatch && method === "POST") {
+        const [, ws, slug] = repoGetMatch;
+
+        if (ws !== "test-workspace") {
+            notFound(res, "Workspace not found");
+
+            return;
+        }
+
+        // Magic slug to exercise the "token cannot create repositories" branch
+        if (slug === "forbidden-repo") {
+            json(res, 403, { type: "error", error: { message: "You do not have permission to create a repository" } });
+
+            return;
+        }
+
+        if (REPOSITORIES.some(r => r.slug === slug)) {
+            json(res, 409, { type: "error", error: { message: `Repository with this name already exists: ${slug}` } });
+
+            return;
+        }
+
+        const body = await readBody(req);
+
+        json(res, 201, {
+            uuid: `{repo-${slug}}`,
+            name: body.name ?? slug,
+            full_name: `${ws}/${slug}`,
+            slug,
+            description: body.description ?? "",
+            is_private: body.is_private ?? true,
+            scm: body.scm ?? "git",
+            fork_policy: body.fork_policy ?? "allow_forks",
+            project: body.project ?? null,
+            created_on: "2025-06-01T00:00:00Z",
+            updated_on: "2025-06-01T00:00:00Z",
+            links: {
+                self: { href: `http://localhost:7990/2.0/repositories/${ws}/${slug}` },
+                clone: [
+                    { name: "https", href: `http://localhost:7990/${ws}/${slug}.git` },
+                    { name: "ssh", href: `ssh://git@localhost:7999/${ws}/${slug}.git` }
+                ]
+            }
+        });
+
+        return;
+    }
+
     if (repoGetMatch && method === "GET") {
         const repo = REPOSITORIES.find(r => r.slug === repoGetMatch[2]);
 
@@ -929,6 +977,55 @@ const server = createServer(async(req, res) => {
 
     // ── DC: Repositories list ────────────────────────────────
     const dcRepoListMatch = path.match(/^\/rest\/api\/latest\/projects\/([^\/]+)\/repos$/);
+
+    if (dcRepoListMatch && method === "POST") {
+        const projectKey = dcRepoListMatch[1];
+
+        if (projectKey !== "TEST") {
+            json(res, 404, { errors: [{ message: "Project not found" }] });
+
+            return;
+        }
+
+        const body = await readBody(req);
+        const slug = String(body.name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+        // Magic name to exercise the "token cannot create repositories" branch
+        if (slug === "forbidden-repo") {
+            json(res, 403, { errors: [{ message: "You are not permitted to create a repository in this project" }] });
+
+            return;
+        }
+
+        if (DC_REPOSITORIES.some(r => r.slug === slug)) {
+            json(res, 409, { errors: [{ message: `This repository URL is already taken by '${slug}'` }] });
+
+            return;
+        }
+
+        json(res, 201, {
+            id: 900,
+            name: body.name,
+            slug,
+            scmId: body.scmId ?? "git",
+            state: "AVAILABLE",
+            statusMessage: "Available",
+            forkable: body.forkable ?? true,
+            public: body.public ?? false,
+            description: body.description,
+            defaultBranch: body.defaultBranch,
+            project: DC_PROJECT,
+            links: {
+                self: [{ href: `http://localhost:7990/projects/${projectKey}/repos/${slug}` }],
+                clone: [
+                    { name: "http", href: `http://localhost:7990/scm/${projectKey.toLowerCase()}/${slug}.git` },
+                    { name: "ssh", href: `ssh://git@localhost:7999/${projectKey.toLowerCase()}/${slug}.git` }
+                ]
+            }
+        });
+
+        return;
+    }
 
     if (dcRepoListMatch && method === "GET") {
         if (dcRepoListMatch[1] !== "TEST") {

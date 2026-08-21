@@ -78,7 +78,7 @@ async function startHttpTransport(config: ReturnType<typeof parseConfig>, port: 
             try {
                 await server.connect(transport);
                 await transport.handleRequest(req, res);
-            } catch (error) {
+            } catch(error) {
                 logger.error(`Error handling MCP request: ${error instanceof Error ? error.message : error}`);
 
                 if (!res.headersSent) {

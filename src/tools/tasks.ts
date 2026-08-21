@@ -67,7 +67,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -137,7 +137,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(task, "Task created."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -188,7 +188,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(task));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Task", `${taskId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -263,7 +263,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(task, "Task updated."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Task", `${taskId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -320,7 +320,7 @@ export function registerTaskTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(true, "Task deleted."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Task", `${taskId} on PR ${ws}/${repoSlug}#${pullRequestId}`));
                 }

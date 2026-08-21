@@ -55,7 +55,7 @@ export default tsEslint.config(
         }
     },
 
-    stylistic.configs["all-flat"],
+    stylistic.configs["all"],
     {
         name: "stylistic",
         plugins: {
@@ -65,6 +65,7 @@ export default tsEslint.config(
             "@stylistic/quote-props": ["error", "consistent-as-needed"],
             "@stylistic/array-element-newline": ["error", "consistent"],
             "@stylistic/object-curly-spacing": ["error", "always", { objectsInObjects: false }],
+            "@stylistic/curly-newline": ["error", { multiline: true, consistent: true }],
             "@stylistic/brace-style": ["error", "1tbs", { allowSingleLine: true }],
             "@stylistic/lines-between-class-members": [
                 "error",
@@ -96,10 +97,6 @@ export default tsEslint.config(
                 { blankLine: "any", prev: ["export", "import"], next: ["export", "import"] },
                 { blankLine: "always", prev: ["if"], next: "*" },
                 { blankLine: "any", prev: ["if"], next: ["if"] }
-            ],
-            "@stylistic/curly-newline": [
-                "error", { multiline: true,
-                    consistent: true }
             ],
             "@stylistic/quotes": ["error", "double"],
             "@stylistic/semi": ["error", "always"],

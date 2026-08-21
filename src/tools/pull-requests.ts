@@ -67,7 +67,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Repository", `${ws}/${repoSlug}`));
                 }
@@ -144,7 +144,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(pr, "Pull request created successfully."));
-            } catch (error) {
+            } catch(error) {
                 return toMcpResult(toolError(error));
             }
         }
@@ -182,7 +182,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(pr));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -246,7 +246,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(pr, "Pull request updated successfully."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -292,7 +292,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -334,7 +334,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result, "Pull request approved."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -376,7 +376,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(true, "Approval removed."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -416,7 +416,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result, "Changes requested."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -456,7 +456,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(true, "Change request removed."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -504,7 +504,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result, "Pull request declined."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -558,7 +558,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result, "Pull request merged."));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -604,7 +604,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -648,7 +648,7 @@ export function registerPullRequestTools(server: McpServer, client: BitbucketCli
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }

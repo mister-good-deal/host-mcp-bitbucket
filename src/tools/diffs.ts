@@ -49,7 +49,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(diff));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -95,7 +95,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(result.values));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
@@ -140,7 +140,7 @@ export function registerDiffTools(server: McpServer, client: BitbucketClient, pa
                 );
 
                 return toMcpResult(toolSuccess(patch));
-            } catch (error) {
+            } catch(error) {
                 if (error instanceof BitbucketClientError && error.statusCode === 404) {
                     return toMcpResult(toolNotFound("Pull Request", `${ws}/${repoSlug}#${pullRequestId}`));
                 }
