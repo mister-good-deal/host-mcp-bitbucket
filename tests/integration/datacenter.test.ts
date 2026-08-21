@@ -199,6 +199,69 @@ describe("Integration: Bitbucket Data Center (mock)", () => {
         });
     });
 
+    describe("createRepository", () => {
+        it("should create a repository in the project", async() => {
+            const res = await callTool("createRepository", {
+                name: "brand-new-repo",
+                description: "Created by integration test",
+                defaultBranch: "main",
+                forkable: true
+            });
+
+            expect(res.status).toBe("COMPLETED");
+
+            const repo = res.result as Record<string, unknown>;
+
+            expect(repo.slug).toBe("brand-new-repo");
+            expect(repo.scmId).toBe("git");
+            expect(repo.defaultBranch).toBe("main");
+            expect(repo.forkable).toBe(true);
+            expect(repo).toHaveProperty("project");
+        });
+
+        it("should map isPrivate to the DC public flag", async() => {
+            const res = await callTool("createRepository", { name: "public-repo", isPrivate: false });
+
+            expect(res.status).toBe("COMPLETED");
+            expect((res.result as Record<string, unknown>).public).toBe(true);
+        });
+
+        it("should report that repoSlug is ignored on Data Center", async() => {
+            const res = await callTool("createRepository", { name: "slug-ignored-repo", repoSlug: "custom-slug" });
+
+            expect(res.status).toBe("COMPLETED");
+            expect(res.message).toContain("repoSlug is ignored");
+            expect((res.result as Record<string, unknown>).slug).toBe("slug-ignored-repo");
+        });
+
+        it("should accept projectKey as an alias for the workspace", async() => {
+            const res = await callTool("createRepository", { name: "aliased-repo", projectKey: DC_WORKSPACE });
+
+            expect(res.status).toBe("COMPLETED");
+            expect((res.result as Record<string, unknown>).slug).toBe("aliased-repo");
+        });
+
+        it("should fail with a conflict when the repository already exists", async() => {
+            const res = await callTool("createRepository", { name: DC_REPO });
+
+            expect(res.status).toBe("FAILED");
+            expect(res.message).toContain("already exists");
+        });
+
+        it("should fail with a permission message when creation is forbidden", async() => {
+            const res = await callTool("createRepository", { name: "forbidden-repo" });
+
+            expect(res.status).toBe("FAILED");
+            expect(res.message).toContain("repository-creation permission");
+        });
+
+        it("should fail for an unknown project", async() => {
+            const res = await callTool("createRepository", { name: "whatever", workspace: "NOPE" });
+
+            expect(res.status).toBe("FAILED");
+        });
+    });
+
     // ── Branches & Tags ──────────────────────────────────────────────
 
     describe("listBranches", () => {

@@ -34,13 +34,15 @@ src/
     types.ts        # Bitbucket API type definitions
     utils.ts        # URL normalization, query string building, workspace extraction
   tools/
-    output-schemas.ts # Zod output schemas for all 32 tools (wired into registerTool)
+    output-schemas.ts # Zod output schemas for all 39 tools (wired into registerTool)
     workspace.ts    # 2 tools: getCurrentUser, getWorkspace
-    repositories.ts # 2 tools: listRepositories, getRepository
+    repositories.ts # 3 tools: listRepositories, getRepository, createRepository
     pull-requests.ts # 13 tools: getPullRequests, createPullRequest, getPullRequest, updatePullRequest, getPullRequestActivity, approvePullRequest, unapprovePullRequest, requestChanges, removeChangeRequest, declinePullRequest, mergePullRequest, getPullRequestCommits, getPullRequestStatuses
     comments.ts     # 7 tools: getPullRequestComments, getPullRequestComment, addPullRequestComment, updatePullRequestComment, deletePullRequestComment, resolveComment, reopenComment
     diffs.ts        # 3 tools: getPullRequestDiff, getPullRequestDiffStat, getPullRequestPatch
     tasks.ts        # 5 tools: getPullRequestTasks, createPullRequestTask, getPullRequestTask, updatePullRequestTask, deletePullRequestTask
+    refs.ts         # 2 tools: listBranches, listTags
+    reviews.ts      # 4 tools (Data Center only): addPendingReviewComment, getPendingReview, submitPendingReview, discardPendingReview
 tests/
   unit/
     setup.ts        # Global test setup — silences logger

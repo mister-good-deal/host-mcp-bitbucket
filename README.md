@@ -118,6 +118,13 @@ Unless noted otherwise, listing tools accept the following optional parameters:
 |------|-------------|
 | `listRepositories` | List repositories in a workspace |
 | `getRepository` | Get details for a specific repository |
+| `createRepository` | Create a repository in a workspace (Cloud) or project (Data Center) |
+
+> **Note on `createRepository`:** the slug comes from the URL on Cloud, so it is derived from `name` unless
+> `repoSlug` is given; on Data Center the server always derives it. `defaultBranch` is Data Center only —
+> Cloud cannot set it before a branch exists, so it is ignored and reported in the response message.
+> `isPrivate` maps to `is_private` on Cloud and to `public` (inverted) on Data Center; `forkable` maps to
+> `forkable` on Data Center and to `fork_policy` (`allow_forks`/`no_forks`) on Cloud.
 
 ### Pull Request Operations
 

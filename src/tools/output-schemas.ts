@@ -31,6 +31,8 @@ export const listRepositoriesOutput = ToolResponseSchema.describe("Repositories 
 
 export const getRepositoryOutput = ToolResponseSchema.describe("Repository details");
 
+export const createRepositoryOutput = ToolResponseSchema.describe("Created repository");
+
 // ── Pull request tools ───────────────────────────────────────────────────
 
 export const getPullRequestsOutput = ToolResponseSchema.describe("Pull requests for a repository");
@@ -121,6 +123,7 @@ export const OUTPUT_SCHEMAS: Record<string, z.ZodType> = {
     // Repositories
     listRepositories: listRepositoriesOutput,
     getRepository: getRepositoryOutput,
+    createRepository: createRepositoryOutput,
     // Pull requests
     getPullRequests: getPullRequestsOutput,
     createPullRequest: createPullRequestOutput,
